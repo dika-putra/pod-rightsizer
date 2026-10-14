@@ -24,6 +24,8 @@ Then open http://localhost:8765. The page starts with sample data so you can see
 
 You can also upload pod count CSVs, for example from the Pod Available and Pod Desired panels. Any CSV with a Time column and numeric columns works. With one value column, the series is named after the file name.
 
+The current request and limit are shown at the top and can be edited. Grafana sometimes reports them as 0 or empty (often fixed by restarting the service): zero values are ignored when reading the CSV, and the page warns when a value is missing so you can fill it in. The service table follows those edits.
+
 Formatted exports (`470 MiB`, `23.6 milicore`) are also read. The CSV needs one column per pod. Columns named `requests` and `limits` are used as the current values.
 
 ## How the recommendation works

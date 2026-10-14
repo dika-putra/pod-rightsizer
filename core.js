@@ -154,7 +154,7 @@
     const refMed = idx => {
       if (idx < 0) return null;
       const a = [];
-      for (let r = 1; r < rows.length; r++) { const v = convert(readCell(rows[r][idx]), kind, bytesMode); if (v != null) a.push(v); }
+      for (let r = 1; r < rows.length; r++) { const v = convert(readCell(rows[r][idx]), kind, bytesMode); if (v != null && v > 0) a.push(v); }
       return a.length ? pct(asc(a), .5) : null;
     };
     return {
@@ -203,6 +203,15 @@
     return { warn, crit, warnPct, critPct, warnSamples: above(warn), critSamples: above(crit), warnTimes: times(warn), critTimes: times(crit) };
   }
 
+  // Dari request hitungan (raw) dan request sekarang: arah, request akhir, dan limit.
+  // Selisih di bawah 5% dianggap tetap.
+  function adjust(raw, req, mult) {
+    const change = req > 0 ? (raw / req - 1) * 100 : 0;
+    const dir = Math.abs(change) < 5 ? 'tetap' : change < 0 ? 'turun' : 'naik';
+    const recReq = dir === 'tetap' && req > 0 ? req : raw;
+    return { change, dir, recReq, recLim: Math.ceil(recReq * mult) };
+  }
+
   // Rekomendasi request, limit, dan biaya.
   // Request = yang terbesar dari: (1) rata-rata antar pod pada persentil pilihan dibagi (target - ruang aman),
   // agar HPA tidak scale-up; (2) p99 pod tunggal + buffer; (3) minimum.
@@ -214,10 +223,7 @@
     const reqPod = Math.ceil(sm.pooled.p99 * (1 + c.buffer / 100));
     const raw = Math.max(c.min, reqHpa, reqPod);
     const binds = raw === reqHpa ? 'hpa' : raw === reqPod ? 'pod' : 'min';
-    const change = c.req > 0 ? (raw / c.req - 1) * 100 : 0;
-    const dir = Math.abs(change) < 5 ? 'tetap' : change < 0 ? 'turun' : 'naik';
-    const recReq = dir === 'tetap' && c.req > 0 ? c.req : raw;
-    const recLim = Math.ceil(recReq * c.mult);
+    const { change, dir, recReq, recLim } = adjust(raw, c.req, c.mult);
     const limitRisk = recLim < sm.maxPod * 1.1;
     const unitCost = r => costFor(c.kind, r, c.pods, c.hours, c.priceCore, c.priceGiB);
     const costNow = unitCost(c.req), costNew = unitCost(recReq);
@@ -295,7 +301,7 @@
     return { priceCore, priceGiB: priceCore * o.ratio };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
+  const Core = { parseCSV, analyze, summarize, simulate, plan, adjust, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);

@@ -50,4 +50,13 @@ assert.strictEqual(Core.parseCost(Core.parseCSV('Time,Value\n1790000000000,$12.3
 assert.strictEqual(Core.serviceName(Core.parseCSV('Time,evermos-be-687486564-ggkh6,evermos-be-69bb8f8fbd-dpbrr,requests,limits\n1,2,3,4,5')), 'evermos-be');
 assert.strictEqual(Core.serviceName(Core.parseCSV('Time,Value\n1,2')), '');
 assert.ok(Math.abs(Core.costFor('memory', 1024, 2, 730, 0.035, 0.005) - 7.3) < 1e-9);
+// adjust: selisih di bawah 5% tetap, lainnya turun atau naik; limit = request x pengali.
+assert.deepStrictEqual(Core.adjust(100, 102, 2), { change: (100 / 102 - 1) * 100, dir: 'tetap', recReq: 102, recLim: 204 });
+assert.strictEqual(Core.adjust(100, 200, 1.5).dir, 'turun');
+assert.strictEqual(Core.adjust(300, 200, 1.5).recLim, 450);
+// limits bernilai 0 di Grafana diabaikan, nilai positif dipakai.
+const z = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n1790000000000,10,25,0\n1790000120000,12,25,128\n1790000240000,12,25,0'), { filename: 'CPU.csv' });
+assert.strictEqual(z.limit, 128);
+const z0 = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n1790000000000,10,25,0\n1790000120000,12,25,0'), { filename: 'CPU.csv' });
+assert.strictEqual(z0.limit, null);
 console.log('ok');

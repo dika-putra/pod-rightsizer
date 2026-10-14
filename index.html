@@ -164,6 +164,18 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
     <div style="margin-top:14px;max-width:300px">
       <label class="f"><span><span data-i18n="cost_label"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_cost">i</span></span><input type="number" id="costNow" min="0" step="any" data-i18n-ph="cost_ph"></label>
     </div>
+    <div class="pricebox" id="curbox" hidden>
+      <h3><span data-i18n="h_cur"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_cur">i</span></h3>
+      <div class="settings" id="cur-cpu" hidden style="margin-top:0">
+        <label class="f"><span><b>CPU</b> · <span data-i18n="req_now" data-u="m"></span></span><input type="number" id="req-cpu" min="0" step="any"></label>
+        <label class="f"><span><b>CPU</b> · <span data-i18n="lim_now" data-u="m"></span></span><input type="number" id="lim-cpu" min="0" step="any"></label>
+      </div>
+      <div class="settings" id="cur-memory" hidden>
+        <label class="f"><span><b>Memory</b> · <span data-i18n="req_now" data-u="MiB"></span></span><input type="number" id="req-memory" min="0" step="any"></label>
+        <label class="f"><span><b>Memory</b> · <span data-i18n="lim_now" data-u="MiB"></span></span><input type="number" id="lim-memory" min="0" step="any"></label>
+      </div>
+      <p class="rwarn" id="curwarn" style="margin:8px 0 0"></p>
+    </div>
     <details id="settings">
       <summary data-i18n="settings"></summary>
       <div class="settings">
@@ -233,7 +245,7 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
     <div class="addbar">
       <label class="f"><span data-i18n="t_name"></span><input type="text" id="svcName"></label>
       <label class="f"><span data-i18n="t_linkl"></span><input type="text" id="svcLink"></label>
-      <label class="f"><span data-i18n="t_week"></span><input type="text" id="svcWeek"></label>
+      <label class="f"><span><span data-i18n="t_week"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_week">i</span></span><input type="text" id="svcWeek"></label>
       <button class="btn" type="button" id="addRow" data-i18n="t_add"></button>
     </div>
     <p class="hint" id="addHint" style="margin:8px 0 0"></p>
@@ -344,6 +356,10 @@ const I18N = {
     t_cost_ph: 'estimasi {v}', t_cost_tip: 'Isi biaya asli service ini. Kosong = estimasi harga standar.',
     t_sample_off: 'Data contoh tidak bisa ditambahkan ke tabel.', t_nodata: 'Muat data dulu.', batch_added: '{n} service ditambahkan ke tabel.',
     t_copied: 'Baris tersalin, tempel di sheet.', t_dl: 'CSV diunduh.',
+    h_cur: 'Request dan limit sekarang',
+    tip_cur: 'Dibaca dari CSV. Kadang Grafana menampilkan kosong atau 0 (biasanya perlu restart service). Isi manual kalau perlu, hasil dan tabel ikut berubah.',
+    warn_zero: '{v}: request atau limit 0 atau kosong. Isi manual.',
+    tip_week: 'Nomor minggu ISO (Senin sampai Minggu), misal 2026-W42 = minggu ke-42 tahun 2026. Boleh diganti, misal 1 atau 2.',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -432,6 +448,10 @@ const I18N = {
     t_cost_ph: 'estimate {v}', t_cost_tip: 'Enter this service\'s real cost. Empty = standard price estimate.',
     t_sample_off: 'Sample data cannot be added to the table.', t_nodata: 'Load data first.', batch_added: '{n} services added to the table.',
     t_copied: 'Rows copied, paste into the sheet.', t_dl: 'CSV downloaded.',
+    h_cur: 'Current request and limit',
+    tip_cur: 'Read from the CSV. Grafana sometimes shows empty or 0 (usually fixed by restarting the service). Fill it in manually if needed; results and the table follow.',
+    warn_zero: '{v}: request or limit is 0 or empty. Fill it in manually.',
+    tip_week: 'ISO week number (Monday to Sunday), e.g. 2026-W42 = week 42 of 2026. You can change it, e.g. 1 or 2.',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -466,14 +486,9 @@ function applyStatic() {
 
 /* ---------- kerangka tiap resource ---------- */
 function skeleton(k) {
-  const u = k === 'cpu' ? 'm' : 'MiB';
   const s = el('section', 'panel'); s.id = 'sec-' + k; s.hidden = true;
   s.innerHTML = `
     <div class="reshead"><h2>${NAME[k]}</h2><span class="hint" id="src-${k}"></span></div>
-    <div class="inputs">
-      <label class="f"><span data-i18n="req_now" data-u="${u}"></span><input type="number" id="req-${k}" min="0" step="any"></label>
-      <label class="f"><span data-i18n="lim_now" data-u="${u}"></span><input type="number" id="lim-${k}" min="0" step="any"></label>
-    </div>
     <ol class="why" id="why-${k}"></ol>
     <p class="check" id="check-${k}"></p>
     <div class="chips" id="chips-${k}" hidden></div>
@@ -650,8 +665,17 @@ function renderAll() {
     if (ok) { const p = renderKind(k); if (p) plans.push({ k, p }); }
   }
   S.lastPlans = plans;
+  const loadedK = KINDS.filter(k => S.data[k] && S.data[k].res);
+  $('curbox').hidden = !loadedK.length;
+  for (const k of KINDS) $('cur-' + k).hidden = !loadedK.includes(k);
+  const bad = loadedK.filter(k => !(num('req-' + k) > 0) || !(num('lim-' + k) > 0)).map(k => NAME[k]);
+  $('curwarn').textContent = bad.length ? t('warn_zero', { v: bad.join(', ') }) : '';
   if (!S.nameTouched) { for (const k of ['memory', 'cpu']) { const d = S.data[k]; if (d && d.res) { const g = Core.serviceName(d.rows); if (g) { $('svcName').value = g; break; } } } }
   if (!$('svcWeek').value) $('svcWeek').value = isoWeek(new Date());
+  if (plans.length && !['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample)) {
+    const cur = S.rows.find(r => isCurrentRow(r));
+    if (cur) { const fresh = makeRowFromCurrent(); cur.cpu = fresh.cpu; cur.mem = fresh.mem; cur.pods = fresh.pods; cur.prices = fresh.prices; saveRows(); }
+  }
   renderSummary(plans);
   renderTable();
   renderPods();
@@ -796,7 +820,10 @@ function isoWeek(d) {
   return x.getUTCFullYear() + '-W' + String(Math.ceil(((x - y0) / 86400000 + 1) / 7)).padStart(2, '0');
 }
 const r0 = v => Math.round(v);
-function partFromPlan(c, p) { return { req: c.req, lim: c.lim, p99: p.sm.pooled.p99, recReq: p.recReq, recLim: p.recLim, dir: p.dir, change: p.change }; }
+function partFromPlan(c, p) { return { req: c.req, lim: c.lim, p99: p.sm.pooled.p99, raw: p.raw, mult: c.mult, recReq: p.recReq, recLim: p.recLim, dir: p.dir, change: p.change }; }
+function refreshPart(part) { const a = Core.adjust(part.raw != null ? part.raw : part.recReq, part.req, part.mult || 2); part.change = a.change; part.dir = a.dir; part.recReq = a.recReq; part.recLim = a.recLim; }
+const isCurrentRow = row => S.lastPlans.length > 0 && !['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample) && row.service === $('svcName').value.trim() && row.week === $('svcWeek').value.trim();
+const EDIT = { 4: ['cpu', 'req', 'cpu'], 5: ['cpu', 'lim', 'cpu'], 6: ['mem', 'req', 'memory'], 7: ['mem', 'lim', 'memory'] };
 function podsOf(res) { const n = res.series.map(x => x.n); return { avg: n.reduce((a, b) => a + b, 0) / n.length, max: Math.max(...n) }; }
 function upsertRow(row) {
   S.rows = S.rows.filter(r => !(r.service === row.service && r.week === row.week));
@@ -845,6 +872,15 @@ function renderTable() {
       else if (i === 10) {
         const inp = el('input', 'cost'); inp.type = 'number'; inp.min = '0'; inp.step = 'any'; inp.value = row.cost > 0 ? r0(row.cost * 100) / 100 : ''; inp.placeholder = t('t_cost_ph', { v: cs.now.toFixed(2) }); inp.title = t('t_cost_tip');
         inp.addEventListener('change', () => { row.cost = parseFloat(inp.value) > 0 ? parseFloat(inp.value) : 0; saveRows(); renderTable(); }); td.appendChild(inp);
+      }
+      else if (EDIT[i] && row[EDIT[i][0]]) {
+        const [pk, f, kind] = EDIT[i], inp = el('input', 'cost'); inp.type = 'number'; inp.min = '0'; inp.step = 'any'; inp.value = r0(row[pk][f]);
+        inp.addEventListener('change', () => {
+          const val = Math.max(0, parseFloat(inp.value) || 0);
+          if (isCurrentRow(row)) { $((f === 'req' ? 'req-' : 'lim-') + kind).value = val; renderAll(); return; }
+          row[pk][f] = val; if (f === 'req') refreshPart(row[pk]); saveRows(); renderTable();
+        });
+        td.appendChild(inp);
       }
       else { td.textContent = x; if (i === 17) td.className = cs.saving < 0 ? 'neg' : 'pos'; }
       tr.appendChild(td);
