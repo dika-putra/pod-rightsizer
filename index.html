@@ -495,6 +495,11 @@ function recompute(k, fresh) {
 }
 function loadTexts(items, isSample) {
   const errors = [];
+  // Unggahan asli menghapus semua data contoh supaya tidak tercampur.
+  if (!isSample) {
+    for (const k of KINDS) if (S.data[k] && S.data[k].sample) S.data[k] = null;
+    S.reps = S.reps.filter(r => !r.sample);
+  }
   for (const it of items) {
     const rows = Core.parseCSV(it.text);
     if (/monthly[ _-]*cost/i.test(it.name)) {
