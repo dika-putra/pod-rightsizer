@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pod Rightsizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2f5f7; --surface:#ffffff; --soft:#e9eef2; --ink:#13202b; --muted:#566675; --line:#d5dde4;
+  --accent:#0a6a70; --accent-ink:#ffffff;
+  --ok:#1c7a4a; --okbg:#e2f3e9; --warn:#a05a00; --warnbg:#fbeed6; --bad:#b3261e; --badbg:#fbe3e0;
+  --font-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e151b; --surface:#151f28; --soft:#1c2933; --ink:#e5edf3; --muted:#93a5b4; --line:#26353f;
+    --accent:#4cc3c9; --accent-ink:#06222a;
+    --ok:#5fd18f; --okbg:#143323; --warn:#f0b34a; --warnbg:#38290f; --bad:#ff7b72; --badbg:#3d1815;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e151b; --surface:#151f28; --soft:#1c2933; --ink:#e5edf3; --muted:#93a5b4; --line:#26353f;
+  --accent:#4cc3c9; --accent-ink:#06222a;
+  --ok:#5fd18f; --okbg:#143323; --warn:#f0b34a; --warnbg:#38290f; --bad:#ff7b72; --badbg:#3d1815;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:1040px;margin-inline:auto;display:flex;flex-direction:column;gap:16px}
+h1{font-size:1.75rem;line-height:1.15;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.lede{margin:0;color:var(--muted);max-width:68ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.hint{color:var(--muted);font-size:.86rem}
+code{font-family:var(--font-mono);font-size:.85em;background:var(--soft);padding:1px 5px;border-radius:4px}
+ol.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;max-width:75ch}
+.drop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1.5px dashed var(--line);border-radius:8px;padding:14px;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--soft)}
+.btn{font:inherit;font-weight:600;border-radius:7px;padding:8px 14px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#status{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:.88rem}
+#status .err{color:var(--bad);font-weight:600}
+.badge{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--warnbg);color:var(--warn);margin-left:6px}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600;color:var(--accent);width:fit-content}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:500;min-width:0}
+input[type=number],input[type=text],select{font:inherit;font-family:var(--font-mono);font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%;min-width:0}
+.hero{border-radius:10px;padding:16px;border:1px solid var(--ok);background:var(--okbg);display:flex;flex-direction:column;gap:4px}
+.hero.warn{border-color:var(--warn);background:var(--warnbg)}
+.hero .tag{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ok)}
+.hero.warn .tag{color:var(--warn)}
+.hero .big{font-size:2.2rem;font-weight:700;font-family:var(--font-mono);line-height:1.1}
+.hero .sub{color:var(--muted);font-size:.9rem}
+.tablewrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td{font-family:var(--font-mono);font-size:.92rem}
+td.st{font-family:var(--font-body);font-weight:600}
+td.st.ok,.pos{color:var(--ok)} td.st.warn,.neg{color:var(--warn)} td.st.bad{color:var(--bad)}
+tr.cur td:first-child::after{content:" sekarang";font-family:var(--font-body);font-size:.72rem;color:var(--muted)}
+.reshead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px}
+.reshead h2{margin:0;font-size:1rem;color:var(--ink);letter-spacing:.02em}
+.inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,220px));gap:12px;margin-bottom:12px}
+.reco{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rc{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rc .lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.rc .now{color:var(--muted);font-family:var(--font-mono);font-size:.9rem}
+.rc .new{font-family:var(--font-mono);font-size:1.6rem;font-weight:700;line-height:1.2}
+.rc .note{font-size:.84rem;color:var(--muted)}
+.rc .note b{font-weight:700}
+.rc .warnline{font-size:.82rem;color:var(--warn);font-weight:600;margin-top:4px}
+.why{margin:14px 0 0;padding-left:1.3em;display:flex;flex-direction:column;gap:3px;font-size:.9rem;color:var(--muted)}
+.why li.bind{color:var(--ink);font-weight:600}
+.check{margin:10px 0 0;font-size:.9rem}
+.pill{display:inline-block;font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px;margin-left:6px}
+.pill.ok{background:var(--okbg);color:var(--ok)} .pill.warn{background:var(--warnbg);color:var(--warn)} .pill.bad{background:var(--badbg);color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.chip{font:inherit;font-family:var(--font-mono);font-size:.8rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chartbox{position:relative;margin-top:8px}
+canvas{display:block;width:100%;height:280px}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:.8rem;font-family:var(--font-mono);box-shadow:0 2px 8px rgba(0,0,0,.18);display:none;white-space:nowrap;z-index:2;top:12px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+dl.s{margin:0;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.foot{font-size:.8rem;color:var(--muted);max-width:75ch;margin:0}
+@media (prefers-reduced-motion:reduce){.drop{transition:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Pod Rightsizer</h1>
+    <p class="lede">Unggah CSV CPU dan Memory dari Grafana. Hasilnya rekomendasi request dan limit, biaya sekarang, dan estimasi penghematan per bulan.</p>
+  </header>
+
+  <section class="panel">
+    <h2>1. Ambil data dari Grafana</h2>
+    <ol class="steps">
+      <li>Buka dashboard, atur time range yang mau dianalisis (misal 24 jam atau 14 hari).</li>
+      <li>Arahkan mouse ke judul panel <b>CPU Usage</b> atau <b>Memory Usage</b>, klik menu titik tiga, pilih <b>Inspect</b>, lalu <b>Data</b>.</li>
+      <li>Buka <b>Data options</b>. Di <b>Show data frame</b> pilih <b>Series joined by time</b>.</li>
+      <li>Matikan <b>Formatted data</b> supaya angkanya murni, tanpa teks <code>MiB</code> atau <code>milicore</code>.</li>
+      <li>Klik <b>Download CSV</b>. Ulangi untuk panel satunya kalau mau hitung CPU dan Memory sekaligus.</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>2. Unggah CSV</h2>
+    <div class="drop" id="drop">
+      <input class="vh" type="file" id="file" accept=".csv,text/csv" multiple>
+      <label class="btn" for="file">Pilih file CSV</label>
+      <button class="btn ghost" type="button" id="sample">Pakai data contoh</button>
+      <span class="hint">Boleh pilih dua file sekaligus. File dibaca di browser, tidak diunggah ke mana pun.</span>
+    </div>
+    <ul id="status" role="status"></ul>
+    <details id="settings">
+      <summary>Pengaturan</summary>
+      <div class="settings">
+        <label class="f">Target HPA (%)<input type="number" id="target" value="80" min="1" max="200" step="1"></label>
+        <label class="f">Ruang aman (poin %)<input type="number" id="margin" value="5" min="0" max="50" step="1"></label>
+        <label class="f">Jaga rata-rata HPA di<select id="basis"><option value="p95">p95</option><option value="p99" selected>p99</option><option value="max">Maks</option></select></label>
+        <label class="f">Buffer pod tunggal (%)<input type="number" id="buffer" value="15" min="0" max="100" step="1"></label>
+        <label class="f">Limit = request x<input type="number" id="mult" value="2" min="1" max="5" step="0.1"></label>
+        <label class="f">Minimum request<input type="number" id="minReq" value="25" min="0" step="1"></label>
+        <label class="f">Jumlah pod rata-rata<input type="number" id="pods" value="2" min="0.1" step="0.1"></label>
+        <label class="f">Harga CPU ($ per core-jam)<input type="number" id="priceCore" value="0.035" min="0" step="0.001"></label>
+        <label class="f">Harga Memory ($ per GiB-jam)<input type="number" id="priceGiB" value="0.005" min="0" step="0.001"></label>
+      </div>
+      <p class="hint" style="margin:10px 0 0">Harga default hanya contoh. Ganti dengan harga asli cluster kamu (misal dari metric <code>node_cpu_hourly_cost</code> dan <code>node_ram_hourly_cost</code> kalau memakai OpenCost). Jumlah pod diisi otomatis dari rata-rata pod bersamaan di data.</p>
+    </details>
+  </section>
+
+  <section class="panel" id="summary" hidden aria-labelledby="h-sum">
+    <h2 id="h-sum">Ringkasan</h2>
+    <div class="hero" id="hero"></div>
+    <div class="tablewrap"><table id="sumtable"></table></div>
+  </section>
+
+  <div id="results" class="wrap" style="gap:16px"></div>
+
+  <p class="foot">Perkiraan. Request dihitung dari rata-rata antar pod (cara HPA menghitung utilisasi), pod tunggal tertinggi (p99), dan minimum. Biaya mengikuti request: jumlah pod x 730 jam x request x harga, sama seperti panel Monthly Cost. Data tanpa satuan: memory dianggap bytes kalau angkanya besar, CPU dianggap milicore.</p>
+</main>
+
+<script src="core.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const KINDS = ['cpu', 'memory'];
+const NAME = { cpu: 'CPU', memory: 'Memory' };
+const HOURS = 730;
+const S = { data: { cpu: null, memory: null }, podsTouched: false, plot: {} };
+
+const nf = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+const fmt = n => !isFinite(n) ? '-' : (Math.abs(n) >= 100 || Number.isInteger(n) ? nf.format(n) : nf1.format(n));
+const usd = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
+const fmtT = t => t == null ? '' : new Date(t).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+/* ---------- kerangka tiap resource ---------- */
+function skeleton(k) {
+  const u = k === 'cpu' ? 'm' : 'MiB';
+  const s = el('section', 'panel'); s.id = 'sec-' + k; s.hidden = true;
+  s.innerHTML = `
+    <div class="reshead"><h2>${NAME[k]}</h2><span class="hint" id="src-${k}"></span></div>
+    <div class="inputs">
+      <label class="f">Request sekarang (${u})<input type="number" id="req-${k}" min="0" step="any"></label>
+      <label class="f">Limit sekarang (${u})<input type="number" id="lim-${k}" min="0" step="any"></label>
+    </div>
+    <div class="reco" id="reco-${k}"></div>
+    <ol class="why" id="why-${k}"></ol>
+    <p class="check" id="check-${k}"></p>
+    <div class="chips" id="chips-${k}" hidden></div>
+    <details open data-chart="${k}"><summary>Grafik rata-rata antar pod</summary>
+      <div class="chartbox"><canvas id="cv-${k}" role="img" aria-label="Grafik rata-rata ${NAME[k]} antar pod"></canvas><div class="tip" id="tip-${k}"></div></div>
+      <div class="legend" id="lg-${k}"></div>
+    </details>
+    <details><summary>Detail statistik</summary><div class="cards" id="cards-${k}"></div></details>
+    <details><summary>Simulasi request lain</summary>
+      <label class="f" style="max-width:380px;margin-top:10px">Kandidat request (pisahkan dengan koma)<input type="text" id="cands-${k}"></label>
+      <div class="tablewrap"><table id="sim-${k}"></table></div>
+    </details>`;
+  return s;
+}
+for (const k of KINDS) $('results').appendChild(skeleton(k));
+
+/* ---------- data contoh (buatan, bukan data asli) ---------- */
+function sampleCSV(k) {
+  let seed = k === 'cpu' ? 5 : 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const n = 720, step = 120000, t0 = Date.UTC(2026, 9, 12, 2, 0, 0);
+  const pods = [
+    { name: 'contoh-app-5d9c7b6f8-a1b2c', from: 0, to: 720 },
+    { name: 'contoh-app-5d9c7b6f8-d3e4f', from: 0, to: 420 },
+    { name: 'contoh-app-7c4f9d2a1-g5h6i', from: 240, to: 720 },
+    { name: 'contoh-app-7c4f9d2a1-j7k8l', from: 240, to: 720 }
+  ];
+  const lines = [['Time', ...pods.map(p => p.name), 'requests', 'limits'].join(',')];
+  for (let i = 0; i < n; i++) {
+    const row = [t0 + i * step];
+    for (const p of pods) {
+      if (i < p.from || i >= p.to) { row.push('undefined'); continue; }
+      if (k === 'memory') {
+        const age = i - p.from, v = 600 - 180 * Math.exp(-age / 60) + (rnd() - .5) * 18;
+        row.push(Math.round(v * 1048576));
+      } else {
+        const burst = rnd() > .985 ? 120 + rnd() * 200 : 0;
+        row.push(Math.round((40 + rnd() * 50 + burst) * 10) / 10);
+      }
+    }
+    row.push(k === 'memory' ? 866123776 : 750, k === 'memory' ? 2046820352 : 2000);
+    lines.push(row.join(','));
+  }
+  return lines.join('\n');
+}
+
+/* ---------- muat data ---------- */
+function recompute(k, fresh) {
+  const d = S.data[k];
+  const res = Core.analyze(d.rows, { filename: d.name, kind: k, excluded: d.excluded });
+  if (res.error) { d.res = null; return res.error; }
+  d.res = res;
+  if (fresh) {
+    $('req-' + k).value = res.request != null ? Math.round(res.request * 10) / 10 : '';
+    $('lim-' + k).value = res.limit != null ? Math.round(res.limit * 10) / 10 : '';
+    $('cands-' + k).value = '';
+  }
+  return null;
+}
+function loadTexts(items, isSample) {
+  const errors = [];
+  for (const it of items) {
+    const rows = Core.parseCSV(it.text);
+    const probe = Core.analyze(rows, { filename: it.name });
+    if (probe.error) { errors.push(it.name + ': ' + probe.error); continue; }
+    S.data[probe.kind] = { rows, name: it.name, sample: isSample, excluded: new Set(), res: null };
+    const e = recompute(probe.kind, true);
+    if (e) errors.push(it.name + ': ' + e);
+  }
+  if (!S.podsTouched) {
+    const d = S.data.memory && S.data.memory.res ? S.data.memory : S.data.cpu && S.data.cpu.res ? S.data.cpu : null;
+    if (d) $('pods').value = Math.round(d.res.series.reduce((s, x) => s + x.n, 0) / d.res.series.length * 10) / 10;
+  }
+  S.errors = errors;
+  renderAll();
+}
+async function loadFiles(files) {
+  const items = [];
+  for (const f of files) { try { items.push({ name: f.name, text: await f.text() }); } catch (e) { S.errors = [f.name + ': gagal dibaca']; } }
+  loadTexts(items, false);
+}
+
+/* ---------- render ---------- */
+function cfg(k) {
+  return { kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
+    buffer: num('buffer'), mult: num('mult') || 2, min: num('minReq'), pods: num('pods'), hours: HOURS, priceCore: num('priceCore'), priceGiB: num('priceGiB') };
+}
+function renderStatus() {
+  const ul = $('status'); ul.textContent = '';
+  for (const k of KINDS) {
+    const d = S.data[k]; if (!d || !d.res) continue;
+    const r = d.res, li = el('li');
+    li.append(el('b', '', NAME[k]), document.createTextNode(` · ${d.name} · ${r.podsUsed} dari ${r.podsTotal} pod · ${r.series.length} titik waktu`));
+    const t0 = r.series[0].t, t1 = r.series[r.series.length - 1].t;
+    if (t0 != null) li.append(document.createTextNode(` · ${fmtT(t0)} sampai ${fmtT(t1)}`));
+    if (d.sample) li.append(el('span', 'badge', 'Data contoh, bukan data asli'));
+    ul.appendChild(li);
+  }
+  for (const e of S.errors || []) ul.appendChild(el('li', 'err', e));
+}
+function renderAll() {
+  renderStatus();
+  const plans = [];
+  for (const k of KINDS) {
+    const d = S.data[k], ok = !!(d && d.res);
+    $('sec-' + k).hidden = !ok;
+    if (ok) { const p = renderKind(k); if (p) plans.push({ k, p }); }
+  }
+  renderSummary(plans);
+}
+function renderSummary(plans) {
+  $('summary').hidden = !plans.length;
+  if (!plans.length) return;
+  const now = plans.reduce((s, x) => s + x.p.costNow, 0), nw = plans.reduce((s, x) => s + x.p.costNew, 0), sv = now - nw;
+  const hero = $('hero'); hero.className = 'hero' + (sv < 0 ? ' warn' : ''); hero.textContent = '';
+  hero.append(el('span', 'tag', sv < 0 ? 'Estimasi biaya naik per bulan' : 'Estimasi hemat per bulan'), el('div', 'big', usd(Math.abs(sv))),
+    el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '')));
+  const t = $('sumtable');
+  t.innerHTML = '<thead><tr><th>Resource</th><th>Request</th><th>Limit</th><th>Biaya per bulan</th><th>Hemat</th></tr></thead>';
+  const tb = el('tbody');
+  for (const { k, p } of plans) {
+    const c = cfg(k), u = k === 'cpu' ? 'm' : 'MiB', tr = el('tr');
+    const cells = [NAME[k], `${fmt(c.req)} → ${fmt(p.recReq)} ${u}`, `${fmt(c.lim)} → ${fmt(p.recLim)} ${u}`, `${usd(p.costNow)} → ${usd(p.costNew)}`, usd(p.saving)];
+    cells.forEach((x, i) => { const td = el('td', i === 4 ? (p.saving < 0 ? 'neg' : 'pos') : '', x); tr.appendChild(td); });
+    tb.appendChild(tr);
+  }
+  t.appendChild(tb);
+}
+function renderKind(k) {
+  const d = S.data[k], res = d.res, u = res.unit, c = cfg(k);
+  $('src-' + k).textContent = d.name + (d.sample ? ' (contoh)' : '');
+  renderChips(k);
+  const reco = $('reco-' + k), why = $('why-' + k), check = $('check-' + k);
+  reco.textContent = ''; why.textContent = ''; check.textContent = '';
+  if (!(c.req > 0)) {
+    reco.appendChild(el('p', 'hint', 'Isi request sekarang untuk melihat rekomendasi.'));
+    S.plot[k] = null; drawChart(k, c); return null;
+  }
+  const p = Core.plan(res, c), sm = p.sm;
+
+  const rc = (lab, now, nw, note, warn) => {
+    const b = el('div', 'rc'); b.append(el('span', 'lab', lab), el('span', 'now', 'sekarang ' + now), el('span', 'new', nw));
+    const n = el('span', 'note'); if (note instanceof Node) n.appendChild(note); else n.textContent = note; b.appendChild(n);
+    if (warn) b.appendChild(el('span', 'warnline', warn)); return b;
+  };
+  const dirTxt = { turun: 'Turunkan', naik: 'Naikkan', tetap: 'Tetap' }[p.dir];
+  const reqNote = el('span'); reqNote.append(el('b', p.dir === 'turun' ? 'pos' : p.dir === 'naik' ? 'neg' : '', dirTxt),
+    document.createTextNode(p.dir === 'tetap' ? ` (selisih ${fmt(Math.abs(p.change))}%, di bawah 5%)` : ` ${fmt(Math.abs(p.change))}%`));
+  const limWarn = p.limitRisk ? `Pod tertinggi di data ${fmt(sm.maxPod)} ${u}, lebih tinggi dari limit ini. ${k === 'cpu' ? 'Risiko throttle (request melambat).' : 'Risiko OOM (pod mati).'} Naikkan pengali limit.` : '';
+  const costNote = el('span'); costNote.append(el('b', p.saving < 0 ? 'neg' : 'pos', (p.saving < 0 ? 'Naik ' : 'Hemat ') + usd(Math.abs(p.saving))), document.createTextNode(' per bulan'));
+  reco.append(
+    rc('Request', fmt(c.req) + ' ' + u, fmt(p.recReq) + ' ' + u, reqNote),
+    rc('Limit', fmt(c.lim) + ' ' + u, fmt(p.recLim) + ' ' + u, `Request x ${c.mult}`, limWarn),
+    rc('Biaya per bulan', usd(p.costNow), usd(p.costNew), costNote));
+
+  const basisLbl = { p95: 'p95', p99: 'p99', max: 'maks' }[c.basis];
+  const li = (txt, on) => { const e = el('li', on ? 'bind' : '', txt + (on ? ' (dipakai)' : '')); why.appendChild(e); };
+  li(`HPA: rata-rata antar pod ${basisLbl} ${fmt(p.avgBasis)} ÷ ${c.target - c.margin}% = ${fmt(p.reqHpa)} ${u}`, p.binds === 'hpa');
+  li(`Pod tunggal: p99 ${fmt(sm.pooled.p99)} + ${c.buffer}% = ${fmt(p.reqPod)} ${u}`, p.binds === 'pod');
+  li(`Minimum: ${fmt(c.min)} ${u}`, p.binds === 'min');
+  const lbl = { ok: 'Aman', warn: 'Mepet', bad: 'Memicu scale-up' }[p.after.st];
+  check.append(document.createTextNode(`Dengan request ${fmt(p.recReq)} ${u}, rata-rata antar pod maksimal ${fmt(p.after.max)}% dari request (target HPA ${c.target}%), ${fmt(p.after.overPct)}% waktu di atas target.`), el('span', 'pill ' + p.after.st, lbl));
+
+  const dl = rows => '<dl class="s">' + rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('') + '</dl>';
+  $('cards-' + k).innerHTML =
+    `<div class="card"><h2>Rata-rata antar pod</h2>${dl([['p50', fmt(sm.avg.p50) + ' ' + u], ['p95', fmt(sm.avg.p95) + ' ' + u], ['p99', fmt(sm.avg.p99) + ' ' + u], ['maks', fmt(sm.avg.max) + ' ' + u]])}</div>` +
+    `<div class="card"><h2>Utilisasi vs request sekarang</h2>${dl([['p50', fmt(sm.util.p50) + '%'], ['p95', fmt(sm.util.p95) + '%'], ['maks', fmt(sm.util.max) + '%'], ['di atas ' + c.target + '%', fmt(sm.overPct) + '% waktu']])}</div>` +
+    `<div class="card"><h2>Pod tunggal</h2>${dl([['p50', fmt(sm.pooled.p50) + ' ' + u], ['p95', fmt(sm.pooled.p95) + ' ' + u], ['p99', fmt(sm.pooled.p99) + ' ' + u], ['p99.9', fmt(sm.pooled.p999) + ' ' + u], ['maks', fmt(sm.pooled.max) + ' ' + u]])}</div>` +
+    `<div class="card"><h2>Pod bersamaan</h2>${dl([['median', fmt(sm.pods.median)], ['maks', fmt(sm.pods.max)], ['% pod tertinggi dari limit', c.lim > 0 ? fmt(sm.limPct) + '%' : '-']])}</div>`;
+
+  const ci = $('cands-' + k);
+  if (!ci.value.trim()) ci.value = [...new Set([p.recReq, Math.round(c.req * .9), Math.round(c.req), Math.round(c.req * 1.1)].filter(x => x > 0))].sort((a, b) => a - b).join(', ');
+  const cands = ci.value.split(/[,\s]+/).map(Number).filter(x => x > 0);
+  const sim = Core.simulate(res, c.target, c.margin, cands), L = { ok: 'Aman', warn: 'Mepet', bad: 'Scale-up' };
+  $('sim-' + k).innerHTML = `<thead><tr><th>Request (${u})</th><th>Util p50</th><th>Util p95</th><th>Util maks</th><th>Waktu di atas target</th><th>Status</th></tr></thead><tbody>` +
+    sim.map(r => `<tr class="${Math.abs(r.req - c.req) < .5 ? 'cur' : ''}"><td>${fmt(r.req)}</td><td>${fmt(r.p50)}%</td><td>${fmt(r.p95)}%</td><td>${fmt(r.max)}%</td><td>${fmt(r.overPct)}%</td><td class="st ${r.st}">${L[r.st]}</td></tr>`).join('') + '</tbody>';
+
+  S.plot[k] = { c, u };
+  drawChart(k, c);
+  return p;
+}
+function renderChips(k) {
+  const d = S.data[k], box = $('chips-' + k);
+  if (d.res.revs.length < 2) { box.hidden = true; return; }
+  box.hidden = false; box.textContent = '';
+  box.appendChild(el('span', 'hint', 'Revisi pod yang dihitung:'));
+  for (const r of d.res.revs) {
+    const b = el('button', 'chip', `${r.rev} (${r.pods} pod)`); b.type = 'button';
+    b.setAttribute('aria-pressed', d.excluded.has(r.rev) ? 'false' : 'true');
+    b.addEventListener('click', () => {
+      if (d.excluded.has(r.rev)) d.excluded.delete(r.rev); else d.excluded.add(r.rev);
+      if (d.excluded.size >= d.res.revs.length) d.excluded.delete(r.rev);
+      const e = recompute(k, false); S.errors = e ? [e] : []; renderAll();
+    });
+    box.appendChild(b);
+  }
+}
+
+/* ---------- grafik ---------- */
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function drawChart(k, c) {
+  const d = S.data[k]; if (!d || !d.res) return;
+  const cv = $('cv-' + k), w = cv.clientWidth, h = 280;
+  if (w < 50) return;
+  const res = d.res, dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const S1 = res.series.filter(x => x.t != null); if (S1.length < 2) return;
+  c = c || cfg(k); const u = res.unit;
+  const thr = c.req > 0 ? c.req * c.target / 100 : null;
+  const ymax = niceMax(Math.max(...S1.map(x => x.max), thr || 0, c.req || 0) * 1.05);
+  const P = { l: 52, r: 14, t: 14, b: 26 }, iw = w - P.l - P.r, ih = h - P.t - P.b;
+  const tmin = S1[0].t, tmax = S1[S1.length - 1].t;
+  const X = t => P.l + (t - tmin) / (tmax - tmin) * iw, Y = v => P.t + ih - (v / ymax) * ih;
+  const ink = cssv('--ink'), muted = cssv('--muted'), line = cssv('--line'), acc = cssv('--accent'), warn = cssv('--warn');
+  g.font = '11px ' + cssv('--font-mono'); g.lineWidth = 1;
+  g.strokeStyle = line; g.fillStyle = muted; g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let i = 0; i <= 5; i++) { const v = ymax / 5 * i, y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.fillText(fmt(v), P.l - 6, y); }
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  const nt = Math.max(2, Math.min(6, Math.floor(iw / 110)));
+  for (let i = 0; i <= nt; i++) { const t = tmin + (tmax - tmin) * i / nt; g.fillText(fmtT(t), Math.min(Math.max(X(t), P.l + 30), w - P.r - 30), h - P.b + 7); }
+  const path = (key, color, lw) => { g.beginPath(); g.strokeStyle = color; g.lineWidth = lw; S1.forEach((s, i) => { const x = X(s.t), y = Y(s[key]); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); };
+  path('max', muted, 1); path('avg', acc, 2);
+  const hline = (v, color, label, dash) => { const y = Y(v); g.beginPath(); g.setLineDash(dash); g.strokeStyle = color; g.lineWidth = 1.5; g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.setLineDash([]); g.fillStyle = color; g.textAlign = 'left'; g.textBaseline = 'bottom'; g.fillText(label, P.l + 6, y - 3); };
+  if (c.req > 0) hline(c.req, ink, 'request ' + fmt(c.req), [2, 4]);
+  if (thr) hline(thr, warn, 'ambang HPA ' + fmt(thr), [6, 4]);
+  S.plot[k] = Object.assign(S.plot[k] || {}, { S1, X, Y, P, w, h, iw, tmin, tmax, ink, acc, u, c });
+  $('lg-' + k).innerHTML = `<span><i style="border-color:${acc}"></i>rata-rata antar pod</span><span><i style="border-color:${muted};border-top-width:1px"></i>pod tertinggi</span>` +
+    (thr ? `<span><i style="border-color:${warn};border-top-style:dashed"></i>ambang HPA (${c.target}% x request)</span>` : '') + (c.req > 0 ? `<span><i style="border-color:${ink};border-top-style:dotted"></i>request</span>` : '');
+}
+function hover(k, ev) {
+  const p = S.plot[k]; if (!p || !p.S1) return;
+  const x = ev.clientX - $('cv-' + k).getBoundingClientRect().left;
+  if (x < p.P.l || x > p.w - p.P.r) return leave(k);
+  const t = p.tmin + (x - p.P.l) / p.iw * (p.tmax - p.tmin);
+  let lo = 0, hi = p.S1.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (p.S1[m].t < t) lo = m; else hi = m; }
+  const s = Math.abs(p.S1[lo].t - t) < Math.abs(p.S1[hi].t - t) ? p.S1[lo] : p.S1[hi];
+  drawChart(k, p.c);
+  const g = $('cv-' + k).getContext('2d'), px = p.X(s.t);
+  g.strokeStyle = p.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(Math.round(px) + .5, p.P.t); g.lineTo(Math.round(px) + .5, p.h - p.P.b); g.stroke();
+  g.fillStyle = p.acc; g.beginPath(); g.arc(px, p.Y(s.avg), 3.5, 0, 7); g.fill();
+  const tip = $('tip-' + k);
+  tip.textContent = ''; tip.style.display = 'block';
+  [fmtT(s.t), `rata-rata ${fmt(s.avg)} ${p.u}` + (p.c.req > 0 ? ` (${fmt(s.avg / p.c.req * 100)}%)` : ''), `tertinggi ${fmt(s.max)} ${p.u}`, `${s.n} pod`].forEach((x, i) => { if (i) tip.appendChild(document.createElement('br')); tip.appendChild(document.createTextNode(x)); });
+  tip.style.left = Math.min(Math.max(px + 12, 0), p.w - tip.offsetWidth) + 'px';
+}
+function leave(k) { $('tip-' + k).style.display = 'none'; const p = S.plot[k]; if (p) drawChart(k, p.c); }
+
+/* ---------- event ---------- */
+$('file').addEventListener('change', e => { if (e.target.files.length) loadFiles([...e.target.files]); });
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
+$('sample').addEventListener('click', () => { S.podsTouched = false; loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })), true); });
+$('pods').addEventListener('input', () => { S.podsTouched = true; });
+for (const id of ['target', 'margin', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceCore', 'priceGiB']) $(id).addEventListener('input', renderAll);
+for (const k of KINDS) {
+  for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
+  $('cv-' + k).addEventListener('mousemove', e => hover(k, e));
+  $('cv-' + k).addEventListener('mouseleave', () => leave(k));
+  document.querySelector(`[data-chart="${k}"]`).addEventListener('toggle', () => drawChart(k, S.plot[k] && S.plot[k].c));
+  new ResizeObserver(() => drawChart(k, S.plot[k] && S.plot[k].c)).observe($('cv-' + k).parentElement);
+}
+const redraw = () => KINDS.forEach(k => drawChart(k, S.plot[k] && S.plot[k].c));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })), true);
+</script>
+</body>
+</html>
