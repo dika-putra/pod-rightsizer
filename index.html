@@ -359,7 +359,7 @@ const I18N = {
     tip_table: 'Tiap analisis bisa ditambahkan sebagai satu baris. Tabel tersimpan di browser ini. Pilih beberapa file sekaligus untuk menambah banyak service otomatis, nama service dibaca dari nama pod. Salin baris mulai dari kolom Minggu (tanpa service dan link, urutan sama dengan tabel) lalu tempel di Excel atau Google Sheets. Unduh CSV memuat semua kolom mulai dari service.',
     t_name: 'Nama service', t_linkl: 'Link (opsional)', t_week: 'Minggu', t_add: 'Tambah ke tabel',
     t_service: 'Service', t_link: 'Link', t_pods: 'Pod (rata2 / maks)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
-    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_new_cpu_req: 'CPU request baru', t_new_mem_req: 'Memory request baru', t_saving: 'Hemat ($)',
+    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_new_cpu_req: 'CPU request baru (+/-)', t_new_cpu_lim: 'CPU limit baru (+/-)', t_new_mem_req: 'Memory request baru (+/-)', t_new_mem_lim: 'Memory limit baru (+/-)', t_saving: 'Hemat ($)',
     t_total: 'Total hemat {v} dari {n} service', t_copy: 'Salin baris', t_csv: 'Unduh CSV', t_clear: 'Kosongkan', t_sure: 'Klik lagi untuk hapus semua',
     t_up: 'Geser ke atas', t_down: 'Geser ke bawah',
     t_empty: 'Belum ada baris. Muat data lalu klik Tambah ke tabel, atau pilih beberapa file sekaligus.', t_del: 'Hapus baris',
@@ -374,10 +374,8 @@ const I18N = {
     tip_round: 'Hasil dibulatkan ke atas. Bebas: bilangan bulat. Kelipatan: misal 25 jadi 25, 50, 75. Pangkat 2: 4, 8, 16, ... 128, 256, 512, 1024. Selisih di bawah 5% dari request sekarang tetap dianggap tidak berubah.',
     opt_free: 'Bebas', opt_step: 'Kelipatan', opt_pow2: 'Pangkat 2', round_cpu: 'Pembulatan CPU', round_mem: 'Pembulatan memory', round_step: 'Kelipatan (angka)',
     why_round: 'Pembulatan: {a} → {b}',
-    t_cpu_status: 'Status CPU', t_mem_status: 'Status memory', t_cpu_rec: 'Rekomendasi CPU', t_mem_rec: 'Rekomendasi memory',
-    stc_throttle: 'Lambat (throttle)', stc_near: 'Hampir throttle', stc_burst: 'Burst, aman', stc_ok: 'Optimal', stc_waste: 'Boros',
+    t_cpu_status: 'Status CPU', t_mem_status: 'Status memory', stc_throttle: 'Lambat (throttle)', stc_near: 'Hampir throttle', stc_burst: 'Burst, aman', stc_ok: 'Optimal', stc_waste: 'Boros',
     stm_oom: 'Pod mati (OOM)', stm_near: 'Hampir OOM', stm_evict: 'Aman, risiko evict',
-    rec_min: 'Sudah minimum', rec_same: 'Tidak perlu diubah', rec_down: 'Turunkan request ke {v}', rec_up: 'Naikkan request ke {v}', rec_lim: 'limit ke {v}',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -458,7 +456,7 @@ const I18N = {
     tip_table: 'Each analysis can be added as one row. The table is saved in this browser. Choose several files at once to add many services automatically, service names are read from pod names. Copy rows starts from the Week column (without service and link, in table order); paste it into Excel or Google Sheets. Download CSV has all columns starting from the service.',
     t_name: 'Service name', t_linkl: 'Link (optional)', t_week: 'Week', t_add: 'Add to table',
     t_service: 'Service', t_link: 'Link', t_pods: 'Pods (avg / max)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
-    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_new_cpu_req: 'New CPU request', t_new_mem_req: 'New memory request', t_saving: 'Saving ($)',
+    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_new_cpu_req: 'New CPU request (+/-)', t_new_cpu_lim: 'New CPU limit (+/-)', t_new_mem_req: 'New memory request (+/-)', t_new_mem_lim: 'New memory limit (+/-)', t_saving: 'Saving ($)',
     t_total: 'Total saving {v} across {n} services', t_copy: 'Copy rows', t_csv: 'Download CSV', t_clear: 'Clear', t_sure: 'Click again to delete all',
     t_up: 'Move up', t_down: 'Move down',
     t_empty: 'No rows yet. Load data then click Add to table, or choose several files at once.', t_del: 'Delete row',
@@ -473,10 +471,8 @@ const I18N = {
     tip_round: 'Results are rounded up. Free: whole numbers. Step: e.g. 25 gives 25, 50, 75. Power of 2: 4, 8, 16, ... 128, 256, 512, 1024. A difference under 5% from the current request still counts as unchanged.',
     opt_free: 'Free', opt_step: 'Step', opt_pow2: 'Power of 2', round_cpu: 'CPU rounding', round_mem: 'Memory rounding', round_step: 'Step (number)',
     why_round: 'Rounding: {a} → {b}',
-    t_cpu_status: 'CPU status', t_mem_status: 'Memory status', t_cpu_rec: 'CPU recommendation', t_mem_rec: 'Memory recommendation',
-    stc_throttle: 'Throttled', stc_near: 'Near throttle', stc_burst: 'Burst, safe', stc_ok: 'Optimal', stc_waste: 'Over-provisioned',
+    t_cpu_status: 'CPU status', t_mem_status: 'Memory status', stc_throttle: 'Throttled', stc_near: 'Near throttle', stc_burst: 'Burst, safe', stc_ok: 'Optimal', stc_waste: 'Over-provisioned',
     stm_oom: 'OOM kill', stm_near: 'Near OOM', stm_evict: 'Safe, evict risk',
-    rec_min: 'Already at minimum', rec_same: 'No change needed', rec_down: 'Lower request to {v}', rec_up: 'Raise request to {v}', rec_lim: 'limit to {v}',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -879,20 +875,23 @@ function statusText(part, kind) {
   if (p > r) return t(kind === 'cpu' ? 'stc_burst' : 'stm_evict');
   return p >= 0.6 * r ? t('stc_ok') : t('stc_waste');
 }
-function recText(part) {
-  if (!part) return '-';
-  const min = part.min != null ? part.min : 25;
-  const base = part.dir === 'turun' ? t('rec_down', { v: r0(part.recReq) }) : part.dir === 'naik' ? t('rec_up', { v: r0(part.recReq) }) : (part.req <= min ? t('rec_min') : t('rec_same'));
-  return base + (!(part.lim > 0) || r0(part.recLim) !== r0(part.lim) ? ', ' + t('rec_lim', { v: r0(part.recLim) }) : '');
-}
 // Salin baris mulai dari kolom Minggu: nama service dan link sudah ada di sheet. CSV memuat semua kolom.
 const EXPORT_FROM = 2;
 // Urutan sama dengan kolom di sheet (Week sampai Reduced Cost), diawali Service dan Link.
-const TCOLS = ['t_service', 't_link', 't_week', 't_pods', 't_cpu_req', 't_cpu_lim', 't_mem_req', 't_mem_lim', 't_peak_cpu', 't_peak_mem', 't_cost', 't_cpu_status', 't_mem_status', 't_cpu_rec', 't_mem_rec', 't_new_cpu_req', 't_new_mem_req', 't_saving'];
+const TCOLS = ['t_service', 't_link', 't_week', 't_pods', 't_cpu_req', 't_cpu_lim', 't_mem_req', 't_mem_lim', 't_peak_cpu', 't_peak_mem', 't_cost', 't_cpu_status', 't_mem_status', 't_new_cpu_req', 't_new_cpu_lim', 't_new_mem_req', 't_new_mem_lim', 't_saving'];
+// Selisih rekomendasi dikurangi sekarang: naik positif, turun negatif, tidak berubah 0, tidak diketahui '-'.
+// Di layar angka positif diberi tanda +. Untuk salin dan CSV angka polos.
+function deltaText(part, f, plain) {
+  if (!part) return '-';
+  const cur = f === 'req' ? part.req : part.lim;
+  if (!(cur > 0)) return '-';
+  const d = r0(f === 'req' ? part.recReq : part.recLim) - r0(cur);
+  return plain || d <= 0 ? d : '+' + d;
+}
 function rowValues(row, plain) {
   const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '', lv = p => p && p.lim > 0 ? r0(p.lim) : '', money = x => plain ? Math.round(x * 100) / 100 : x.toFixed(2);
   return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), lv(C), v(M, 'req'), lv(M), v(C, 'p99'), v(M, 'p99'), money(cs.now),
-    statusText(C, 'cpu'), statusText(M, 'memory'), recText(C), recText(M), v(C, 'recReq'), v(M, 'recReq'), money(cs.saving)];
+    statusText(C, 'cpu'), statusText(M, 'memory'), deltaText(C, 'req', plain), deltaText(C, 'lim', plain), deltaText(M, 'req', plain), deltaText(M, 'lim', plain), money(cs.saving)];
 }
 function renderTable() {
   const hasPlan = S.lastPlans.length > 0, sample = ['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample);
