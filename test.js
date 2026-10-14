@@ -50,8 +50,10 @@ assert.strictEqual(Core.parseCost(Core.parseCSV('Time,Value\n1790000000000,$12.3
 assert.strictEqual(Core.serviceName(Core.parseCSV('Time,evermos-be-687486564-ggkh6,evermos-be-69bb8f8fbd-dpbrr,requests,limits\n1,2,3,4,5')), 'evermos-be');
 assert.strictEqual(Core.serviceName(Core.parseCSV('Time,Value\n1,2')), '');
 assert.ok(Math.abs(Core.costFor('memory', 1024, 2, 730, 0.035, 0.005) - 7.3) < 1e-9);
-// adjust: selisih di bawah 5% tetap, lainnya turun atau naik; limit = request x pengali.
-assert.deepStrictEqual(Core.adjust(100, 102, 2), { change: (100 / 102 - 1) * 100, dir: 'tetap', recReq: 102, recLim: 204 });
+// adjust: tanpa ambang, selisih sekecil apa pun tetap turun atau naik; limit = request x pengali.
+assert.deepStrictEqual(Core.adjust(100, 102, 2), { change: (100 / 102 - 1) * 100, dir: 'turun', recReq: 100, recLim: 200 });
+assert.strictEqual(Core.adjust(100, 100, 2).dir, 'tetap');
+assert.strictEqual(Core.adjust(100, 0, 2).dir, 'tetap');   // request sekarang tidak diketahui
 assert.strictEqual(Core.adjust(100, 200, 1.5).dir, 'turun');
 assert.strictEqual(Core.adjust(300, 200, 1.5).recLim, 450);
 // limits bernilai 0 di Grafana diabaikan, nilai positif dipakai.
@@ -74,9 +76,9 @@ assert.strictEqual(rp.recReq, 750);
 assert.strictEqual(rp.recLim, 1500);
 const rq = Core.plan(res, { kind: 'memory', req: 1000, lim: 2000, target: 80, margin: 5, basis: 'max', buffer: 15, mult: 2, min: 25, pods: 2, hours: 730, priceCore: 0.035, priceGiB: 0.005, round: { mode: 'pow2' } });
 assert.strictEqual(rq.raw, 1024);
-assert.strictEqual(rq.dir, 'tetap');      // 1024 hanya 2.4% dari 1000, jadi request sekarang dipertahankan
-assert.strictEqual(rq.recReq, 1000);
-assert.strictEqual(rq.recLim, 2048);      // limit tetap dibulatkan ke pangkat 2
+assert.strictEqual(rq.dir, 'naik');       // tidak ada ambang 5%, 1024 dibanding 1000 tetap naik
+assert.strictEqual(rq.recReq, 1024);
+assert.strictEqual(rq.recLim, 2048);
 // Limit di bawah request (misal limit CPU 0.1 terbaca di panel memory) dianggap kosong.
 const bad = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n1790000000000,300000000,52428800,0.1\n1790000120000,310000000,52428800,0.1'), { filename: 'Memory Usage.csv' });
 assert.strictEqual(bad.kind, 'memory');
@@ -92,4 +94,31 @@ assert.strictEqual(p99.reqPod, 230);   // ceil(200 * 1.15)
 assert.strictEqual(p95.reqPod, 121);   // ceil(105 * 1.15)
 assert.strictEqual(p99.recReq < 500, true);
 assert.ok(p95.recReq <= p99.recReq);
+// Backtest: 1 pod, 100 sampel (95 bernilai 100, 5 bernilai 200). p99 = 200.
+const bt = (req, lim) => Core.backtest(pres, req, lim);
+assert.strictEqual(bt(250, 500).level, 'yellow');     // 200 / 250 = 80%
+assert.strictEqual(bt(300, 500).level, 'green');      // 66.7%
+assert.strictEqual(bt(200, 500).level, 'red');        // 100%
+assert.strictEqual(bt(400, 200).nAboveLim, 5);        // sampel bernilai 200 >= limit 200
+assert.strictEqual(bt(400, 200).podsAboveLim, 1);
+assert.strictEqual(Math.round(bt(150, 500).pctAboveReq), 5);
+assert.strictEqual(pres.podMax[0], 200);
+
+// HPA gabungan: ambil metrik yang lebih tinggi di tiap titik waktu, di irisan waktu kedua CSV.
+const csvOf = vals => 'Time,p-aaaaaaaa-11111,requests,limits\n' + vals.map((v, i) => `${1790000000000 + i * 600000},${v},100,200`).join('\n');
+const cA = Core.analyze(Core.parseCSV(csvOf([10, 10, 90, 10])), { filename: 'CPU.csv', kind: 'cpu' });
+const mA = Core.analyze(Core.parseCSV(csvOf([95, 20, 20, 20]).replace(/,100,200/g, ',104857600,209715200').replace(/,(\d+),104857600/g, (m, v) => ',' + v * 1048576 + ',104857600')), { filename: 'Memory.csv', kind: 'memory' });
+const hc = Core.hpaCombined(cA, mA, 100, 100, 80);
+assert.strictEqual(hc.points, 4);
+assert.strictEqual(hc.above, 2);                       // titik 1 (memory 95%) dan titik 3 (CPU 90%)
+assert.strictEqual(hc.byMem, 1);
+assert.strictEqual(hc.byCpu, 1);
+assert.strictEqual(Math.round(hc.overlap), 100);
+// Irisan sebagian: memory hanya separuh rentang CPU.
+const mHalf = Core.analyze(Core.parseCSV(csvOf([95, 20]).replace(/,100,200/g, ',104857600,209715200').replace(/,(\d+),104857600/g, (m, v) => ',' + v * 1048576 + ',104857600')), { filename: 'Memory.csv', kind: 'memory' });
+assert.strictEqual(Math.round(Core.hpaCombined(cA, mHalf, 100, 100, 80).overlap), 100);   // dihitung terhadap rentang yang lebih pendek
+assert.strictEqual(Core.hpaCombined(cA, mA, 0, 100, 80), null);
+
+// Rentang data: 4 titik per 10 menit = 30 menit.
+assert.ok(Math.abs(Core.spanDays(cA) - 30 / 1440) < 1e-9);
 console.log('ok');

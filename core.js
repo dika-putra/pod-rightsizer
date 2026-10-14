@@ -165,7 +165,8 @@
     return {
       kind, unit: kind === 'memory' ? 'MiB' : 'm',
       request, limit,
-      revs, podsTotal: cols.length, podsUsed: use.length, series, pooled
+      revs, podsTotal: cols.length, podsUsed: use.length, series, pooled,
+      podMax: use.map(c => Math.max(...c.vals.filter(v => v != null)))
     };
   }
 
@@ -216,13 +217,12 @@
     return Math.ceil(v - 1e-9);
   }
 
-  // Dari request hitungan (raw) dan request sekarang: arah, request akhir, dan limit.
-  // Selisih di bawah 5% dianggap tetap.
+  // Dari request hasil hitungan yang sudah dibulatkan (raw) dan request sekarang: arah, request akhir, dan limit.
+  // Tidak ada ambang: "tetap" hanya kalau hasilnya sama dengan request sekarang.
   function adjust(raw, req, mult, rule) {
     const change = req > 0 ? (raw / req - 1) * 100 : 0;
-    const dir = Math.abs(change) < 5 ? 'tetap' : change < 0 ? 'turun' : 'naik';
-    const recReq = dir === 'tetap' && req > 0 ? req : raw;
-    return { change, dir, recReq, recLim: roundUp(recReq * mult, rule) };
+    const dir = !(req > 0) || Math.abs(raw - req) < 0.5 ? 'tetap' : raw < req ? 'turun' : 'naik';
+    return { change, dir, recReq: raw, recLim: roundUp(raw * mult, rule) };
   }
 
   // Rekomendasi request, limit, dan biaya.
@@ -302,6 +302,54 @@
     return null;
   }
 
+  // Backtest: p99 pod tunggal dibanding request baru. Hijau di bawah 80%, kuning 80% sampai di bawah 100%, merah 100% ke atas.
+  // Juga persentase sampel yang sama dengan atau di atas request baru, dan sampel di atas limit baru.
+  function backtest(res, recReq, recLim) {
+    const pooled = res.pooled, n = pooled.length;
+    const p99 = pct(asc(pooled), .99), ratio = p99 / recReq;
+    const aboveReq = pooled.filter(v => v >= recReq).length;
+    const aboveLim = recLim > 0 ? pooled.filter(v => v >= recLim).length : 0;
+    return {
+      level: ratio >= 1 ? 'red' : ratio >= 0.8 ? 'yellow' : 'green', p99, ratio: ratio * 100,
+      pctAboveReq: aboveReq / n * 100, nAboveLim: aboveLim,
+      podsAboveLim: recLim > 0 && res.podMax ? res.podMax.filter(m => m >= recLim).length : 0
+    };
+  }
+
+  // Titik di xs (diurut naik) yang paling dekat dengan t dalam toleransi tol. Mengembalikan indeks atau -1.
+  function nearest(xs, t, tol) {
+    let lo = 0, hi = xs.length - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (xs[m] < t) lo = m; else hi = m; }
+    const j = Math.abs(xs[lo] - t) <= Math.abs(xs[hi] - t) ? lo : hi;
+    return Math.abs(xs[j] - t) <= tol ? j : -1;
+  }
+
+  // HPA memakai metrik yang lebih tinggi dari CPU dan memory. Dihitung di irisan waktu kedua CSV.
+  function hpaCombined(cpuRes, memRes, cpuReq, memReq, target) {
+    const cs = cpuRes.series.filter(x => x.t != null), ms = memRes.series.filter(x => x.t != null);
+    if (!cs.length || !ms.length || !(cpuReq > 0) || !(memReq > 0)) return null;
+    const step = a => { const d = []; for (let i = 1; i < a.length; i++) d.push(a[i].t - a[i - 1].t); return d.length ? pct(asc(d), .5) : 0; };
+    const tol = Math.max(step(cs), step(ms)) / 2 || 1;
+    const mt = ms.map(x => x.t);
+    let points = 0, above = 0, byCpu = 0, byMem = 0;
+    for (const c of cs) {
+      const j = nearest(mt, c.t, tol); if (j < 0) continue;
+      const uc = c.avg / cpuReq * 100, um = ms[j].avg / memReq * 100;
+      points++;
+      if (Math.max(uc, um) > target) { above++; if (uc >= um) byCpu++; else byMem++; }
+    }
+    const span = a => a[a.length - 1].t - a[0].t;
+    const lo = Math.max(cs[0].t, ms[0].t), hi = Math.min(cs[cs.length - 1].t, ms[ms.length - 1].t);
+    const overlap = Math.max(0, hi - lo) / Math.max(1, Math.min(span(cs), span(ms))) * 100;
+    return { points, above, pctAbove: points ? above / points * 100 : 0, byCpu, byMem, overlap };
+  }
+
+  // Rentang data dalam hari, dari titik waktu pertama sampai terakhir.
+  function spanDays(res) {
+    const t = res.series.filter(x => x.t != null).map(x => x.t);
+    return t.length > 1 ? (Math.max(...t) - Math.min(...t)) / 86400000 : 0;
+  }
+
   // Harga per core-jam dan per GiB-jam dari biaya service sekarang.
   // Satu biaya tidak cukup untuk dua harga, jadi rasio harga memory terhadap CPU dipakai sebagai asumsi.
   // biaya = pod x jam x (core x hargaCore + GiB x hargaCore x rasio)
@@ -315,7 +363,7 @@
     return { priceCore, priceGiB: priceCore * o.ratio };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, adjust, roundUp, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
+  const Core = { parseCSV, analyze, summarize, simulate, plan, adjust, roundUp, alertPlan, backtest, hpaCombined, spanDays, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);

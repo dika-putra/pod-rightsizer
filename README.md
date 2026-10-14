@@ -40,21 +40,27 @@ For each resource, the recommended request is the largest of three numbers:
 | Single pod | p99 of any single pod x (1 + buffer) |
 | Minimum | the configured minimum request |
 
-The average across pods is computed at each timestamp over the pods that exist at that time, which is how an HPA utilization target is evaluated. If the result is within 5% of the current request, the request stays as it is.
+The average across pods is computed at each timestamp over the pods that exist at that time, which is how an HPA utilization target is evaluated.
 
-Request and limit are rounded up by the rounding setting for each resource: free (whole numbers), a step of N (for example 25 gives 25, 50, 75), or a power of 2 (4, 8, 16, ... 128, 256, 512). If the rounded request is within 5% of the current one, the current request is kept, and the limit is still rounded.
+Request and limit are rounded up by the rounding setting for each resource: free (whole numbers), a step of N (for example 25 gives 25, 50, 75), or a power of 2 (4, 8, 16, ... 128, 256, 512).
+
+### Checks
+
+- **Safety check (backtest).** For each resource the page compares the single pod p99 with the new request on the same data: green below 80% of the request, yellow from 80% up to 100%, red at 100% or more. It also shows the share of samples at or above the new request, and how many samples (and pods) were at or above the new limit.
+- **HPA scale-up estimate (CPU or memory).** HPA uses the higher of the two utilizations. With both CSVs loaded, the page takes the higher of CPU and memory at each timestamp, over the time the two files share, and shows how often it passes the target for the new request and for the current one. It warns when the shared time is under 90% of the shorter range.
+- **Data range.** The tool expects 14 days of data and warns when a file spans fewer than 13 or more than 15 days. The numbers are still calculated.
 
 The recommended limit is `request x multiplier`. The page warns when that limit is lower than 1.1x the highest pod in the data, because a CPU limit that low can throttle and a memory limit that low can cause OOM kills.
 
-Cost follows the request: `pods x 730 hours x request x unit price`, with CPU priced per core-hour and memory per GiB-hour. The summary adds up the resources you loaded.
+Cost follows the request: `pods x 730 hours x request x unit price`, with CPU priced per core-hour and memory per GiB-hour. The summary adds up the resources you loaded. The pod count is the median number of concurrent pods in the data: the average is pushed up by short deploy and scale-up bursts, and on evermos-be the median reproduced the current monthly cost within about 1% where the average was 16% too high.
 
 ### Alerts
 
-The summary also suggests per-pod alert thresholds as a percentage of the recommended request: warning at 80% and critical at 90% by default. For each threshold it shows how often the loaded data would have crossed it, so you can see whether an alert would be noisy before you create it. The example `alerts` block (message, target, type) is a starting point for Helm values and needs to be adapted to your chart.
+The summary also suggests per-pod alert thresholds as a percentage of the recommended request: warning at 80% and critical at 90% by default. The `alerts` snippet has one target per alert, so it uses a separate level per resource: CPU 90% and memory 80% by default, which matches the alerts running today. For each threshold it shows how often the loaded data would have crossed it, so you can see whether an alert would be noisy before you create it. The example `alerts` block (message, target, type) is a starting point for Helm values and needs to be adapted to your chart.
 
 ### Service table
 
-Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Columns follow the monitoring sheet: Week, Pods (avg / max), CPU request and limit, memory request and limit, Peak CPU and Peak memory (p99), Total Cost, CPU Status, Mem Status, four columns with the new values (new CPU request, new CPU limit, new memory request, new memory limit), and Cost change. Status compares the p99 peak with the current request and limit (for example Over-provisioned, Burst safe, Near OOM). Cost change is the new monthly cost minus the current one: positive when the cost goes up, negative when it goes down. The summary at the top still says "saving" in words.
+Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Columns follow the monitoring sheet: Week, Pods (median / max), CPU request and limit, memory request and limit, Peak CPU and Peak memory (p99), Total Cost, CPU Status, Mem Status, four columns with the new values (new CPU request, new CPU limit, new memory request, new memory limit), and Cost change. Status compares the p99 peak with the current request and limit (for example Over-provisioned, Burst safe, Near OOM). Cost change is the new monthly cost minus the current one: positive when the cost goes up, negative when it goes down. The summary at the top still says "saving" in words.
 
 The new-value columns hold the recommended number itself, for example a request of 50 that should become 25 is written as `25`. They show `-` when nothing changes (same as the current value) or when that resource is not loaded.
 
@@ -74,6 +80,20 @@ Prices are detected from the service's current monthly cost by default. Enter th
 
 The Jumlah pod section shows min, median, max and last value of each series, plus a step chart. The first series, pods running, is the number of pods that have data in the CPU or memory CSV at each timestamp. Other series come from the pod count CSVs you upload.
 
+## Team rules
+
+These come from the manager and DevOps, not from the tool:
+
+| Rule | Value |
+| --- | --- |
+| Limit multiplier | 2, the same for CPU and memory (configurable per resource) |
+| Minimum request | 25, for CPU (m) and memory (MiB) |
+| Rounding | up to a multiple of 25, for CPU and memory |
+
+These are the tool's own choices and have not been reviewed by the manager or DevOps yet: single pod percentile p99, single pod buffer 25%, HPA average at p99, safety margin 5 points, and the 80% and 90% alert levels.
+
+Changes are approved by the manager and applied one service at a time. For one service, the CPU, memory and alert changes go out together. Monitoring is done in Grafana.
+
 ## Settings
 
 | Setting | Default |
@@ -81,15 +101,16 @@ The Jumlah pod section shows min, median, max and last value of each series, plu
 | HPA target | 80% |
 | Safety margin | 5 points |
 | Average percentile | p99 |
-| Single pod buffer | 15% |
+| Single pod buffer | 25% |
 | Single pod percentile | p99 (CPU can be set to p95, memory is always p99) |
-| Limit multiplier | 2 |
+| Limit multiplier | 2 (CPU and memory can be set separately) |
 | Rounding (CPU and memory, separate) | step of 25, rounded up (free, step of N, or power of 2) |
-| Alert warning / critical | 80% / 90% of request |
+| Alert warning / critical (table) | 80% / 90% of request |
+| Alert level in the snippet | CPU 90%, memory 80% of request |
 | Sidecar request and limit | 0 (none) |
 | Container names | main: the detected service name, sidecar: `nginx` |
 | Minimum request | 25 |
-| Average pod count | taken from the data |
+| Pod count | median of concurrent pods, taken from the data |
 | CPU price | $0.035 per core-hour (example value) |
 | Memory price | $0.005 per GiB-hour (example value) |
 | Price ratio (detect mode) | 0.14 memory per GiB / CPU per core (example value) |
@@ -109,3 +130,5 @@ The prices and the ratio are examples. Replace them with your cluster's real val
 ```bash
 node test.js
 ```
+
+The same test runs on every push and pull request through GitHub Actions (`.github/workflows/test.yml`).
