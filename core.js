@@ -157,9 +157,14 @@
       for (let r = 1; r < rows.length; r++) { const v = convert(readCell(rows[r][idx]), kind, bytesMode); if (v != null && v > 0) a.push(v); }
       return a.length ? pct(asc(a), .5) : null;
     };
+    // Limit di bawah request tidak valid di Kubernetes. Biasanya query limit di dashboard salah resource
+    // (misal panel memory yang membaca limit CPU), jadi dianggap kosong.
+    const request = refMed(ri);
+    let limit = refMed(li);
+    if (limit != null && request != null && limit < request) limit = null;
     return {
       kind, unit: kind === 'memory' ? 'MiB' : 'm',
-      request: refMed(ri), limit: refMed(li),
+      request, limit,
       revs, podsTotal: cols.length, podsUsed: use.length, series, pooled
     };
   }

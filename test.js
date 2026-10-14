@@ -77,4 +77,9 @@ assert.strictEqual(rq.raw, 1024);
 assert.strictEqual(rq.dir, 'tetap');      // 1024 hanya 2.4% dari 1000, jadi request sekarang dipertahankan
 assert.strictEqual(rq.recReq, 1000);
 assert.strictEqual(rq.recLim, 2048);      // limit tetap dibulatkan ke pangkat 2
+// Limit di bawah request (misal limit CPU 0.1 terbaca di panel memory) dianggap kosong.
+const bad = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n1790000000000,300000000,52428800,0.1\n1790000120000,310000000,52428800,0.1'), { filename: 'Memory Usage.csv' });
+assert.strictEqual(bad.kind, 'memory');
+assert.strictEqual(bad.request, 50);
+assert.strictEqual(bad.limit, null);
 console.log('ok');
