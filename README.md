@@ -40,6 +40,8 @@ For each resource, the recommended request is the largest of three numbers:
 
 The average across pods is computed at each timestamp over the pods that exist at that time, which is how an HPA utilization target is evaluated. If the result is within 5% of the current request, the request stays as it is.
 
+Request and limit are rounded up by the rounding setting for each resource: free (whole numbers), a step of N (for example 25 gives 25, 50, 75), or a power of 2 (4, 8, 16, ... 128, 256, 512). If the rounded request is within 5% of the current one, the current request is kept, and the limit is still rounded.
+
 The recommended limit is `request x multiplier`. The page warns when that limit is lower than 1.1x the highest pod in the data, because a CPU limit that low can throttle and a memory limit that low can cause OOM kills.
 
 Cost follows the request: `pods x 730 hours x request x unit price`, with CPU priced per core-hour and memory per GiB-hour. The summary adds up the resources you loaded.
@@ -75,6 +77,7 @@ The Jumlah pod section shows min, median, max and last value of each series, plu
 | Average percentile | p99 |
 | Single pod buffer | 15% |
 | Limit multiplier | 2 |
+| Rounding (CPU and memory, separate) | step of 25, rounded up (free, step of N, or power of 2) |
 | Alert warning / critical | 80% / 90% of request |
 | Sidecar request and limit | 0 (none) |
 | Minimum request | 25 |

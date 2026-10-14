@@ -190,6 +190,15 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
         <label class="f"><span><span data-i18n="s_pods"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_pods">i</span></span><input type="number" id="pods" value="2" min="0.1" step="0.1"></label>
       </div>
       <div class="pricebox">
+        <h3><span data-i18n="h_round"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_round">i</span></h3>
+        <div class="settings" style="margin-top:0">
+          <label class="f"><span data-i18n="round_cpu"></span><select id="rndCpuMode"><option value="free" data-i18n="opt_free"></option><option value="step" selected data-i18n="opt_step"></option><option value="pow2" data-i18n="opt_pow2"></option></select></label>
+          <label class="f" id="rndCpuStepW"><span data-i18n="round_step"></span><input type="number" id="rndCpuStep" value="25" min="1" step="1"></label>
+          <label class="f"><span data-i18n="round_mem"></span><select id="rndMemMode"><option value="free" data-i18n="opt_free"></option><option value="step" selected data-i18n="opt_step"></option><option value="pow2" data-i18n="opt_pow2"></option></select></label>
+          <label class="f" id="rndMemStepW"><span data-i18n="round_step"></span><input type="number" id="rndMemStep" value="25" min="1" step="1"></label>
+        </div>
+      </div>
+      <div class="pricebox">
         <h3><span data-i18n="h_container"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_container">i</span></h3>
         <div class="settings" style="margin-top:0">
           <label class="f"><span data-i18n="c_main"></span><input type="text" id="nameMain" value="app"></label>
@@ -360,6 +369,10 @@ const I18N = {
     tip_cur: 'Dibaca dari CSV. Kadang Grafana menampilkan kosong atau 0 (biasanya perlu restart service). Isi manual kalau perlu, hasil dan tabel ikut berubah.',
     warn_zero: '{v}: request atau limit 0 atau kosong. Isi manual.',
     tip_week: 'Penanda periode, misal W1, W2. Baris dengan service dan minggu yang sama diganti.',
+    h_round: 'Pembulatan request dan limit',
+    tip_round: 'Hasil dibulatkan ke atas. Bebas: bilangan bulat. Kelipatan: misal 25 jadi 25, 50, 75. Pangkat 2: 4, 8, 16, ... 128, 256, 512, 1024. Selisih di bawah 5% dari request sekarang tetap dianggap tidak berubah.',
+    opt_free: 'Bebas', opt_step: 'Kelipatan', opt_pow2: 'Pangkat 2', round_cpu: 'Pembulatan CPU', round_mem: 'Pembulatan memory', round_step: 'Kelipatan (angka)',
+    why_round: 'Pembulatan: {a} → {b}',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -452,6 +465,10 @@ const I18N = {
     tip_cur: 'Read from the CSV. Grafana sometimes shows empty or 0 (usually fixed by restarting the service). Fill it in manually if needed; results and the table follow.',
     warn_zero: '{v}: request or limit is 0 or empty. Fill it in manually.',
     tip_week: 'Period label, e.g. W1, W2. A row with the same service and week is replaced.',
+    h_round: 'Rounding for request and limit',
+    tip_round: 'Results are rounded up. Free: whole numbers. Step: e.g. 25 gives 25, 50, 75. Power of 2: 4, 8, 16, ... 128, 256, 512, 1024. A difference under 5% from the current request still counts as unchanged.',
+    opt_free: 'Free', opt_step: 'Step', opt_pow2: 'Power of 2', round_cpu: 'CPU rounding', round_mem: 'Memory rounding', round_step: 'Step (number)',
+    why_round: 'Rounding: {a} → {b}',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -636,8 +653,9 @@ function renderPrices() {
 }
 
 /* ---------- render ---------- */
+const roundRule = k => { const K = k === 'cpu' ? 'Cpu' : 'Mem'; return { mode: $('rnd' + K + 'Mode').value, step: num('rnd' + K + 'Step') }; };
 function cfg(k) {
-  return { kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
+  return { round: roundRule(k), kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
     buffer: num('buffer'), mult: num('mult') || 2, warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: num('pods'),
     hours: HOURS, priceCore: S.prices.core, priceGiB: S.prices.gib };
 }
@@ -665,6 +683,7 @@ function renderAll() {
     if (ok) { const p = renderKind(k); if (p) plans.push({ k, p }); }
   }
   S.lastPlans = plans;
+  $('rndCpuStepW').hidden = $('rndCpuMode').value !== 'step'; $('rndMemStepW').hidden = $('rndMemMode').value !== 'step';
   const loadedK = KINDS.filter(k => S.data[k] && S.data[k].res);
   $('curbox').hidden = !loadedK.length;
   for (const k of KINDS) $('cur-' + k).hidden = !loadedK.includes(k);
@@ -774,6 +793,7 @@ function renderKind(k) {
   li(t('why_hpa', { b: bl, v: fmt(p.avgBasis), p: c.target - c.margin, r: `${fmt(p.reqHpa)} ${u}` }), p.binds === 'hpa');
   li(t('why_pod', { v: fmt(sm.pooled.p99), b: c.buffer, r: `${fmt(p.reqPod)} ${u}` }), p.binds === 'pod');
   li(t('why_min', { v: `${fmt(c.min)} ${u}` }), p.binds === 'min');
+  if (p.pre !== p.raw) why.appendChild(el('li', '', t('why_round', { a: `${fmt(p.pre)} ${u}`, b: `${fmt(p.raw)} ${u}` })));
   check.append(document.createTextNode(t('check', { r: `${fmt(p.recReq)} ${u}`, m: fmt(p.after.max), t: c.target, o: fmt(p.after.overPct) })), el('span', 'pill ' + p.after.st, t('st_' + p.after.st)));
 
   const dl = rows => '<dl class="s">' + rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('') + '</dl>';
@@ -815,8 +835,8 @@ function saveRows() { try { localStorage.setItem('pr_rows', JSON.stringify(S.row
 function restoreRows() { try { const v = JSON.parse(localStorage.getItem('pr_rows') || '[]'); S.rows = Array.isArray(v) ? v : []; } catch (e) { S.rows = []; } }
 const DEFAULT_WEEK = 'W1';
 const r0 = v => Math.round(v);
-function partFromPlan(c, p) { return { req: c.req, lim: c.lim, p99: p.sm.pooled.p99, raw: p.raw, mult: c.mult, recReq: p.recReq, recLim: p.recLim, dir: p.dir, change: p.change }; }
-function refreshPart(part) { const a = Core.adjust(part.raw != null ? part.raw : part.recReq, part.req, part.mult || 2); part.change = a.change; part.dir = a.dir; part.recReq = a.recReq; part.recLim = a.recLim; }
+function partFromPlan(c, p) { return { req: c.req, lim: c.lim, p99: p.sm.pooled.p99, raw: p.raw, mult: c.mult, round: c.round, recReq: p.recReq, recLim: p.recLim, dir: p.dir, change: p.change }; }
+function refreshPart(part) { const a = Core.adjust(part.raw != null ? part.raw : part.recReq, part.req, part.mult || 2, part.round); part.change = a.change; part.dir = a.dir; part.recReq = a.recReq; part.recLim = a.recLim; }
 const isCurrentRow = row => S.lastPlans.length > 0 && !['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample) && row.service === $('svcName').value.trim() && row.week === $('svcWeek').value.trim();
 const EDIT = { 4: ['cpu', 'req', 'cpu'], 5: ['cpu', 'lim', 'cpu'], 6: ['mem', 'req', 'memory'], 7: ['mem', 'lim', 'memory'] };
 function podsOf(res) { const n = res.series.map(x => x.n); return { avg: n.reduce((a, b) => a + b, 0) / n.length, max: Math.max(...n) }; }
@@ -913,7 +933,7 @@ function batchAdd(podItems) {
       if (res.error || !(res.request > 0)) continue;
       const pd = podsOf(res); pods = pods || pd;
       const c = { kind, req: res.request, lim: res.limit || 0, target: num('target') || 80, margin: num('margin'), basis: $('basis').value, buffer: num('buffer'), mult: num('mult') || 2,
-        warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: pd.avg, hours: HOURS, priceCore: prices.core, priceGiB: prices.gib };
+        warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: pd.avg, hours: HOURS, priceCore: prices.core, priceGiB: prices.gib, round: roundRule(kind) };
       parts[kind] = partFromPlan(c, Core.plan(res, c));
     }
     if (!parts.cpu && !parts.memory) continue;
@@ -1081,7 +1101,7 @@ const drop = $('drop');
 drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
 $('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; S.costFile = ''; loadTexts(sampleItems(), true); focusSummary(); });
 $('pods').addEventListener('input', () => { S.podsTouched = true; });
-for (const id of ['target', 'margin', 'warnPct', 'critPct', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'nameMain', 'nameSide', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
+for (const id of ['target', 'margin', 'warnPct', 'critPct', 'rndCpuMode', 'rndCpuStep', 'rndMemMode', 'rndMemStep', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'nameMain', 'nameSide', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
 for (const k of KINDS) {
   for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
   $('cv-' + k).addEventListener('mousemove', e => hover(k, e));

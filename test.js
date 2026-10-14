@@ -59,4 +59,22 @@ const z = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n179
 assert.strictEqual(z.limit, 128);
 const z0 = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n1790000000000,10,25,0\n1790000120000,12,25,0'), { filename: 'CPU.csv' });
 assert.strictEqual(z0.limit, null);
+// Pembulatan ke atas: bebas, kelipatan, pangkat 2.
+assert.strictEqual(Core.roundUp(305.2, { mode: 'free' }), 306);
+assert.strictEqual(Core.roundUp(300, { mode: 'step', step: 25 }), 300);
+assert.strictEqual(Core.roundUp(301, { mode: 'step', step: 25 }), 325);
+assert.strictEqual(Core.roundUp(100, { mode: 'pow2' }), 128);
+assert.strictEqual(Core.roundUp(128, { mode: 'pow2' }), 128);
+assert.strictEqual(Core.roundUp(3, { mode: 'pow2' }), 4);
+// plan memakai pembulatan untuk request dan limit; limit mengikuti aturan yang sama.
+const rp = Core.plan(res, { kind: 'memory', req: 1000, lim: 2000, target: 80, margin: 5, basis: 'max', buffer: 15, mult: 2, min: 25, pods: 2, hours: 730, priceCore: 0.035, priceGiB: 0.005, round: { mode: 'step', step: 25 } });
+assert.strictEqual(rp.pre, 734);
+assert.strictEqual(rp.raw, 750);
+assert.strictEqual(rp.recReq, 750);
+assert.strictEqual(rp.recLim, 1500);
+const rq = Core.plan(res, { kind: 'memory', req: 1000, lim: 2000, target: 80, margin: 5, basis: 'max', buffer: 15, mult: 2, min: 25, pods: 2, hours: 730, priceCore: 0.035, priceGiB: 0.005, round: { mode: 'pow2' } });
+assert.strictEqual(rq.raw, 1024);
+assert.strictEqual(rq.dir, 'tetap');      // 1024 hanya 2.4% dari 1000, jadi request sekarang dipertahankan
+assert.strictEqual(rq.recReq, 1000);
+assert.strictEqual(rq.recLim, 2048);      // limit tetap dibulatkan ke pangkat 2
 console.log('ok');

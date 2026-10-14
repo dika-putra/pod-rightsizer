@@ -203,13 +203,21 @@
     return { warn, crit, warnPct, critPct, warnSamples: above(warn), critSamples: above(crit), warnTimes: times(warn), critTimes: times(crit) };
   }
 
+  // Pembulatan ke atas. mode: free (bilangan bulat), step (kelipatan N), pow2 (1, 2, 4, 8, ..., 128, 256, ...).
+  function roundUp(v, rule) {
+    const mode = rule && rule.mode;
+    if (mode === 'step') { const st = rule.step > 0 ? rule.step : 1; return Math.ceil(v / st - 1e-9) * st; }
+    if (mode === 'pow2') { let p = 1; while (p < v - 1e-9) p *= 2; return p; }
+    return Math.ceil(v - 1e-9);
+  }
+
   // Dari request hitungan (raw) dan request sekarang: arah, request akhir, dan limit.
   // Selisih di bawah 5% dianggap tetap.
-  function adjust(raw, req, mult) {
+  function adjust(raw, req, mult, rule) {
     const change = req > 0 ? (raw / req - 1) * 100 : 0;
     const dir = Math.abs(change) < 5 ? 'tetap' : change < 0 ? 'turun' : 'naik';
     const recReq = dir === 'tetap' && req > 0 ? req : raw;
-    return { change, dir, recReq, recLim: Math.ceil(recReq * mult) };
+    return { change, dir, recReq, recLim: roundUp(recReq * mult, rule) };
   }
 
   // Rekomendasi request, limit, dan biaya.
@@ -221,15 +229,16 @@
     const avgBasis = sm.avg[c.basis];
     const reqHpa = Math.ceil(avgBasis / ((c.target - c.margin) / 100));
     const reqPod = Math.ceil(sm.pooled.p99 * (1 + c.buffer / 100));
-    const raw = Math.max(c.min, reqHpa, reqPod);
-    const binds = raw === reqHpa ? 'hpa' : raw === reqPod ? 'pod' : 'min';
-    const { change, dir, recReq, recLim } = adjust(raw, c.req, c.mult);
+    const pre = Math.max(c.min, reqHpa, reqPod);
+    const binds = pre === reqHpa ? 'hpa' : pre === reqPod ? 'pod' : 'min';
+    const raw = roundUp(pre, c.round);
+    const { change, dir, recReq, recLim } = adjust(raw, c.req, c.mult, c.round);
     const limitRisk = recLim < sm.maxPod * 1.1;
     const unitCost = r => costFor(c.kind, r, c.pods, c.hours, c.priceCore, c.priceGiB);
     const costNow = unitCost(c.req), costNew = unitCost(recReq);
     const after = simulate(res, c.target, c.margin, [recReq])[0];
     const alert = alertPlan(res, recReq, c.warnPct || 80, c.critPct || 90);
-    return { sm, avgBasis, reqHpa, reqPod, raw, binds, change, dir, recReq, recLim, limitRisk, costNow, costNew, saving: costNow - costNew, after, alert };
+    return { sm, avgBasis, reqHpa, reqPod, pre, raw, binds, change, dir, recReq, recLim, limitRisk, costNow, costNew, saving: costNow - costNew, after, alert };
   }
 
   // CSV jumlah pod dari panel Grafana (Pod Available, Pod Desired, Min Pods, Max Pods, dst.).
@@ -301,7 +310,7 @@
     return { priceCore, priceGiB: priceCore * o.ratio };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, adjust, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
+  const Core = { parseCSV, analyze, summarize, simulate, plan, adjust, roundUp, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);
