@@ -359,7 +359,7 @@ const I18N = {
     h_cur: 'Request dan limit sekarang',
     tip_cur: 'Dibaca dari CSV. Kadang Grafana menampilkan kosong atau 0 (biasanya perlu restart service). Isi manual kalau perlu, hasil dan tabel ikut berubah.',
     warn_zero: '{v}: request atau limit 0 atau kosong. Isi manual.',
-    tip_week: 'Nomor minggu ISO (Senin sampai Minggu), misal 2026-W42 = minggu ke-42 tahun 2026. Boleh diganti, misal 1 atau 2.',
+    tip_week: 'Penanda periode, misal W1, W2. Baris dengan service dan minggu yang sama diganti.',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -451,7 +451,7 @@ const I18N = {
     h_cur: 'Current request and limit',
     tip_cur: 'Read from the CSV. Grafana sometimes shows empty or 0 (usually fixed by restarting the service). Fill it in manually if needed; results and the table follow.',
     warn_zero: '{v}: request or limit is 0 or empty. Fill it in manually.',
-    tip_week: 'ISO week number (Monday to Sunday), e.g. 2026-W42 = week 42 of 2026. You can change it, e.g. 1 or 2.',
+    tip_week: 'Period label, e.g. W1, W2. A row with the same service and week is replaced.',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -671,7 +671,7 @@ function renderAll() {
   const bad = loadedK.filter(k => !(num('req-' + k) > 0) || !(num('lim-' + k) > 0)).map(k => NAME[k]);
   $('curwarn').textContent = bad.length ? t('warn_zero', { v: bad.join(', ') }) : '';
   if (!S.nameTouched) { for (const k of ['memory', 'cpu']) { const d = S.data[k]; if (d && d.res) { const g = Core.serviceName(d.rows); if (g) { $('svcName').value = g; break; } } } }
-  if (!$('svcWeek').value) $('svcWeek').value = isoWeek(new Date());
+  if (!$('svcWeek').value) $('svcWeek').value = DEFAULT_WEEK;
   if (plans.length && !['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample)) {
     const cur = S.rows.find(r => isCurrentRow(r));
     if (cur) { const fresh = makeRowFromCurrent(); cur.cpu = fresh.cpu; cur.mem = fresh.mem; cur.pods = fresh.pods; cur.prices = fresh.prices; saveRows(); }
@@ -813,12 +813,7 @@ function renderChips(k) {
 /* ---------- tabel service ---------- */
 function saveRows() { try { localStorage.setItem('pr_rows', JSON.stringify(S.rows)); } catch (e) { /* ignore */ } }
 function restoreRows() { try { const v = JSON.parse(localStorage.getItem('pr_rows') || '[]'); S.rows = Array.isArray(v) ? v : []; } catch (e) { S.rows = []; } }
-function isoWeek(d) {
-  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), day = x.getUTCDay() || 7;
-  x.setUTCDate(x.getUTCDate() + 4 - day);
-  const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
-  return x.getUTCFullYear() + '-W' + String(Math.ceil(((x - y0) / 86400000 + 1) / 7)).padStart(2, '0');
-}
+const DEFAULT_WEEK = 'W1';
 const r0 = v => Math.round(v);
 function partFromPlan(c, p) { return { req: c.req, lim: c.lim, p99: p.sm.pooled.p99, raw: p.raw, mult: c.mult, recReq: p.recReq, recLim: p.recLim, dir: p.dir, change: p.change }; }
 function refreshPart(part) { const a = Core.adjust(part.raw != null ? part.raw : part.recReq, part.req, part.mult || 2); part.change = a.change; part.dir = a.dir; part.recReq = a.recReq; part.recLim = a.recLim; }
@@ -826,8 +821,10 @@ const isCurrentRow = row => S.lastPlans.length > 0 && !['cpu', 'memory'].some(k 
 const EDIT = { 4: ['cpu', 'req', 'cpu'], 5: ['cpu', 'lim', 'cpu'], 6: ['mem', 'req', 'memory'], 7: ['mem', 'lim', 'memory'] };
 function podsOf(res) { const n = res.series.map(x => x.n); return { avg: n.reduce((a, b) => a + b, 0) / n.length, max: Math.max(...n) }; }
 function upsertRow(row) {
-  S.rows = S.rows.filter(r => !(r.service === row.service && r.week === row.week));
-  S.rows.push(row);
+  const i = S.rows.findIndex(r => r.service === row.service && r.week === row.week);
+  if (i < 0) { S.rows.push(row); return; }
+  const old = S.rows[i];
+  S.rows[i] = Object.assign(row, { id: old.id, link: row.link || old.link, cost: row.cost || old.cost });
 }
 function rowCosts(row) {
   const C = row.cpu, M = row.mem, pods = row.pods.avg;
@@ -897,7 +894,7 @@ function makeRowFromCurrent() {
   const parts = {}, first = S.lastPlans[0];
   for (const { k, p } of S.lastPlans) parts[k] = partFromPlan(cfg(k), p);
   const pods = first.p.sm.pods;
-  return { id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), service: $('svcName').value.trim() || 'service', link: $('svcLink').value.trim(), week: $('svcWeek').value.trim() || isoWeek(new Date()),
+  return { id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), service: $('svcName').value.trim() || 'service', link: $('svcLink').value.trim(), week: $('svcWeek').value.trim() || DEFAULT_WEEK,
     pods: { avg: pods.mean, max: pods.max }, cost: num('costNow'), cpu: parts.cpu || null, mem: parts.memory || null, prices: { core: S.prices.core, gib: S.prices.gib } };
 }
 function batchAdd(podItems) {
@@ -917,7 +914,7 @@ function batchAdd(podItems) {
       parts[kind] = partFromPlan(c, Core.plan(res, c));
     }
     if (!parts.cpu && !parts.memory) continue;
-    upsertRow({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), service, link: '', week: isoWeek(new Date()), pods: { avg: pods.avg, max: pods.max }, cost: 0, cpu: parts.cpu || null, mem: parts.memory || null, prices });
+    upsertRow({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), service, link: '', week: DEFAULT_WEEK, pods: { avg: pods.avg, max: pods.max }, cost: 0, cpu: parts.cpu || null, mem: parts.memory || null, prices });
     n++;
   }
   saveRows();
