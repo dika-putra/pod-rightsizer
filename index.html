@@ -155,8 +155,8 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
     </div>
     <ul id="status" role="status"></ul>
     <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;max-width:300px">
-      <label class="f">Biaya service sekarang ($ per bulan)<input type="number" id="costNow" min="0" step="any" placeholder="misal 89.40"></label>
-      <span class="hint">Dipakai untuk menghitung harga CPU dan memory secara otomatis. Ambil dari panel Monthly Cost $, atau unggah CSV panel itu.</span>
+      <label class="f">Biaya service sekarang ($ per bulan), opsional<input type="number" id="costNow" min="0" step="any" placeholder="misal 89.40"></label>
+      <span class="hint">Boleh dikosongkan, biaya akan diestimasi dengan harga standar. Isi untuk hasil yang lebih akurat: ambil dari panel Monthly Cost $, atau unggah CSV panel itu.</span>
     </div>
     <details id="settings">
       <summary>Pengaturan</summary>
@@ -183,7 +183,7 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
       </div>
       <div class="pricebox">
         <h3>Harga untuk hitung biaya</h3>
-        <p class="hint" style="margin:0 0 8px">Dihitung otomatis dari biaya service sekarang (isi di bagian Unggah CSV).</p>
+        <p class="hint" style="margin:0 0 8px">Otomatis. Tanpa biaya sekarang, dipakai estimasi harga standar. Dengan biaya sekarang, harga dihitung dari biaya itu (isi di bagian Unggah CSV).</p>
         <div class="settings" style="margin-top:0">
           <label class="chk"><input type="checkbox" id="priceManualOn"> Isi harga sendiri (matikan hitung otomatis)</label>
         </div>
@@ -397,18 +397,21 @@ function loadedReq(k) { const d = S.data[k]; return d && d.res ? num('req-' + k)
 function getPrices() {
   const man = { core: num('priceCore'), gib: num('priceGiB'), mode: 'manual' };
   if ($('priceManualOn').checked) return man;
+  if (!(num('costNow') > 0)) return Object.assign(man, { mode: 'estimate' });
   const p = Core.detectPrices({ cost: num('costNow'), pods: num('pods'), hours: HOURS, reqCpu: loadedReq('cpu'), reqMem: loadedReq('memory'), ratio: num('ratio') });
   if (p.error) return Object.assign(man, { warn: p.error });
   return { core: p.priceCore, gib: p.priceGiB, mode: 'detect' };
 }
 function renderPrices() {
-  const detect = !$('priceManualOn').checked;
-  $('priceManual').hidden = detect; $('priceDetect').hidden = !detect;
+  const manual = $('priceManualOn').checked, detect = !manual && num('costNow') > 0;
+  $('priceManual').hidden = !manual; $('priceDetect').hidden = !detect;
   for (const k of KINDS) $('xwrap-' + k).hidden = !(detect && !(S.data[k] && S.data[k].res));
   const o = $('priceOut'), p = S.prices;
-  o.textContent = !detect ? '' : p.mode === 'detect'
-    ? `Harga terdeteksi: CPU $${p.core.toFixed(4)} per core-jam, Memory $${p.gib.toFixed(5)} per GiB-jam.`
-    : `${p.warn} Memakai harga manual sementara.`;
+  o.textContent = manual ? '' : p.mode === 'estimate'
+    ? `Biaya belum diisi, jadi memakai estimasi harga standar: CPU $${p.core} per core-jam, Memory $${p.gib} per GiB-jam. Isi biaya sekarang agar lebih akurat.`
+    : p.mode === 'detect'
+      ? `Harga terdeteksi: CPU $${p.core.toFixed(4)} per core-jam, Memory $${p.gib.toFixed(5)} per GiB-jam.`
+      : `${p.warn} Memakai harga standar sementara.`;
 }
 function renderAll() {
   renderStatus();
@@ -428,7 +431,7 @@ function renderSummary(plans) {
   const now = plans.reduce((s, x) => s + x.p.costNow, 0), nw = plans.reduce((s, x) => s + x.p.costNew, 0), sv = now - nw;
   const hero = $('hero'); hero.className = 'hero' + (sv < 0 ? ' warn' : ''); hero.textContent = '';
   hero.append(el('span', 'tag', sv < 0 ? 'Estimasi biaya naik per bulan' : 'Estimasi hemat per bulan'), el('div', 'big', usd(Math.abs(sv))),
-    el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '') + (plans.length < 2 ? '. Hanya resource yang dimuat yang dihitung.' : '') + (S.prices.warn ? '. Memakai harga contoh karena biaya sekarang belum diisi, jadi angka biaya belum akurat.' : '')));
+    el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '') + (plans.length < 2 ? '. Hanya resource yang dimuat yang dihitung.' : '') + (S.prices.mode === 'estimate' ? '. Biaya adalah estimasi dengan harga standar. Isi biaya sekarang agar lebih akurat.' : S.prices.warn ? '. ' + S.prices.warn + ' Memakai harga standar sementara.' : '')));
   const grid = $('recgrid'); grid.textContent = '';
   for (const { k, p } of plans) {
     const c = cfg(k), u = k === 'cpu' ? 'm' : 'MiB', a = p.alert, card = el('div', 'rcard');

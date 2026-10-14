@@ -52,7 +52,7 @@ The summary has copy-ready `resources` and `alerts` blocks in Helm values format
 
 ### Prices
 
-Prices are detected from the service's current monthly cost by default. Enter the cost next to the upload box, or upload the CSV of a Monthly Cost panel (any file named like `Monthly Cost`, with one number). To type the two unit prices yourself, tick **Isi harga sendiri** in Settings. The manual price fields only appear then. Until a cost is entered, example prices are used and the summary says so. A single cost cannot give two prices, so the memory price per GiB-hour is derived from a ratio to the CPU price per core-hour (default 0.14, an example value). The detected prices reproduce the cost you entered. This needs the current CPU and memory requests, taken from the loaded CSVs or typed in.
+Prices are detected from the service's current monthly cost by default. Enter the cost next to the upload box, or upload the CSV of a Monthly Cost panel (any file named like `Monthly Cost`, with one number). To type the two unit prices yourself, tick **Isi harga sendiri** in Settings. The manual price fields only appear then. The cost is optional. Without it, the cost is estimated with standard example prices and the summary says so. A single cost cannot give two prices, so the memory price per GiB-hour is derived from a ratio to the CPU price per core-hour (default 0.14, an example value). The detected prices reproduce the cost you entered. This needs the current CPU and memory requests, taken from the loaded CSVs or typed in.
 
 ## Pod counts
 
