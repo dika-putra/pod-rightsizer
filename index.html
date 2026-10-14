@@ -360,8 +360,8 @@ const I18N = {
     tip_table: 'Tiap analisis bisa ditambahkan sebagai satu baris. Tabel tersimpan di browser ini. Pilih beberapa file sekaligus untuk menambah banyak service otomatis, nama service dibaca dari nama pod. Salin baris mulai dari kolom Minggu (tanpa service dan link, urutan sama dengan tabel) lalu tempel di Excel atau Google Sheets. Unduh CSV memuat semua kolom mulai dari service.',
     t_name: 'Nama service', t_linkl: 'Link (opsional)', t_week: 'Minggu', t_add: 'Tambah ke tabel',
     t_service: 'Service', t_link: 'Link', t_pods: 'Pod (rata2 / maks)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
-    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_new_cpu_req: 'CPU request baru', t_new_cpu_lim: 'CPU limit baru', t_new_mem_req: 'Memory request baru', t_new_mem_lim: 'Memory limit baru', t_saving: 'Hemat ($)',
-    t_total: 'Total hemat {v} dari {n} service', t_copy: 'Salin baris', t_csv: 'Unduh CSV', t_clear: 'Kosongkan', t_sure: 'Klik lagi untuk hapus semua',
+    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_new_cpu_req: 'CPU request baru', t_new_cpu_lim: 'CPU limit baru', t_new_mem_req: 'Memory request baru', t_new_mem_lim: 'Memory limit baru', t_saving: 'Perubahan biaya ($)',
+    t_total: 'Total perubahan biaya {v} dari {n} service', t_copy: 'Salin baris', t_csv: 'Unduh CSV', t_clear: 'Kosongkan', t_sure: 'Klik lagi untuk hapus semua',
     t_up: 'Geser ke atas', t_down: 'Geser ke bawah',
     t_empty: 'Belum ada baris. Muat data lalu klik Tambah ke tabel, atau pilih beberapa file sekaligus.', t_del: 'Hapus baris',
     t_cost_ph: 'estimasi {v}', t_cost_tip: 'Isi biaya asli service ini. Kosong = estimasi harga standar.',
@@ -459,8 +459,8 @@ const I18N = {
     tip_table: 'Each analysis can be added as one row. The table is saved in this browser. Choose several files at once to add many services automatically, service names are read from pod names. Copy rows starts from the Week column (without service and link, in table order); paste it into Excel or Google Sheets. Download CSV has all columns starting from the service.',
     t_name: 'Service name', t_linkl: 'Link (optional)', t_week: 'Week', t_add: 'Add to table',
     t_service: 'Service', t_link: 'Link', t_pods: 'Pods (avg / max)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
-    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_new_cpu_req: 'New CPU request', t_new_cpu_lim: 'New CPU limit', t_new_mem_req: 'New memory request', t_new_mem_lim: 'New memory limit', t_saving: 'Saving ($)',
-    t_total: 'Total saving {v} across {n} services', t_copy: 'Copy rows', t_csv: 'Download CSV', t_clear: 'Clear', t_sure: 'Click again to delete all',
+    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_new_cpu_req: 'New CPU request', t_new_cpu_lim: 'New CPU limit', t_new_mem_req: 'New memory request', t_new_mem_lim: 'New memory limit', t_saving: 'Cost change ($)',
+    t_total: 'Total cost change {v} across {n} services', t_copy: 'Copy rows', t_csv: 'Download CSV', t_clear: 'Clear', t_sure: 'Click again to delete all',
     t_up: 'Move up', t_down: 'Move down',
     t_empty: 'No rows yet. Load data then click Add to table, or choose several files at once.', t_del: 'Delete row',
     t_cost_ph: 'estimate {v}', t_cost_tip: 'Enter this service\'s real cost. Empty = standard price estimate.',
@@ -892,9 +892,9 @@ function newVal(part, f) {
   return cur > 0 && rec === r0(cur) ? '-' : rec;
 }
 function rowValues(row, plain) {
-  const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '', lv = p => p && p.lim > 0 ? r0(p.lim) : '', money = x => plain ? Math.round(x * 100) / 100 : x.toFixed(2);
+  const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '', lv = p => p && p.lim > 0 ? r0(p.lim) : '', money = x => { const m = Math.abs(x) < 0.005 ? 0 : x; return plain ? Math.round(m * 100) / 100 : m.toFixed(2); };
   return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), lv(C), v(M, 'req'), lv(M), v(C, 'p99'), v(M, 'p99'), money(cs.now),
-    statusText(C, 'cpu'), statusText(M, 'memory'), newVal(C, 'req'), newVal(C, 'lim'), newVal(M, 'req'), newVal(M, 'lim'), money(cs.saving)];
+    statusText(C, 'cpu'), statusText(M, 'memory'), newVal(C, 'req'), newVal(C, 'lim'), newVal(M, 'req'), newVal(M, 'lim'), money(-cs.saving)];
 }
 function renderTable() {
   const hasPlan = S.lastPlans.length > 0, sample = ['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample);
@@ -936,7 +936,7 @@ function renderTable() {
     body.appendChild(tr);
   });
   tb.appendChild(body);
-  $('tabletotal').textContent = S.rows.length ? t('t_total', { v: usd(total), n: S.rows.length }) : '';
+  $('tabletotal').textContent = S.rows.length ? t('t_total', { v: (total < 0 ? '+' : '') + usd(-total), n: S.rows.length }) : '';
   ['copyRows', 'dlCsv', 'clearRows'].forEach(id => { $(id).disabled = !S.rows.length; });
 }
 function moveRow(id, dir) {
