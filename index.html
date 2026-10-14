@@ -879,8 +879,13 @@ function statusText(part, kind) {
 const EXPORT_FROM = 2;
 // Urutan sama dengan kolom di sheet (Week sampai Reduced Cost), diawali Service dan Link.
 const TCOLS = ['t_service', 't_link', 't_week', 't_pods', 't_cpu_req', 't_cpu_lim', 't_mem_req', 't_mem_lim', 't_peak_cpu', 't_peak_mem', 't_cost', 't_cpu_status', 't_mem_status', 't_new_cpu_req', 't_new_cpu_lim', 't_new_mem_req', 't_new_mem_lim', 't_saving'];
-// Angka baru hasil rekomendasi (request atau limit). '-' kalau resource itu tidak dimuat.
-const newVal = (part, f) => part ? r0(f === 'req' ? part.recReq : part.recLim) : '-';
+// Angka baru hasil rekomendasi (request atau limit). '-' kalau tidak ada perubahan atau resource itu tidak dimuat.
+// Limit sekarang yang tidak diketahui dianggap berubah, supaya angka rekomendasinya tetap tertulis.
+function newVal(part, f) {
+  if (!part) return '-';
+  const cur = f === 'req' ? part.req : part.lim, rec = r0(f === 'req' ? part.recReq : part.recLim);
+  return cur > 0 && rec === r0(cur) ? '-' : rec;
+}
 function rowValues(row, plain) {
   const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '', lv = p => p && p.lim > 0 ? r0(p.lim) : '', money = x => plain ? Math.round(x * 100) / 100 : x.toFixed(2);
   return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), lv(C), v(M, 'req'), lv(M), v(C, 'p99'), v(M, 'p99'), money(cs.now),
