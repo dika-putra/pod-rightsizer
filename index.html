@@ -116,6 +116,8 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
 .dot.w{background:var(--warn)} .dot.c{background:var(--bad)}
 .sumpanel pre{margin:8px 0 0}
+.chk{display:flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
 .snip{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px;font-weight:600}
 .snipbar{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .sub2{margin:0 0 10px;color:var(--muted);font-size:.9rem;max-width:75ch}
@@ -181,8 +183,9 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
       </div>
       <div class="pricebox">
         <h3>Harga untuk hitung biaya</h3>
+        <p class="hint" style="margin:0 0 8px">Dihitung otomatis dari biaya service sekarang (isi di bagian Unggah CSV).</p>
         <div class="settings" style="margin-top:0">
-          <label class="f">Cara menentukan harga<select id="priceMode"><option value="detect" selected>Hitung dari biaya sekarang</option><option value="manual">Isi sendiri</option></select></label>
+          <label class="chk"><input type="checkbox" id="priceManualOn"> Isi harga sendiri (matikan hitung otomatis)</label>
         </div>
         <div class="settings" id="priceManual">
           <label class="f">Harga CPU ($ per core-jam)<input type="number" id="priceCore" value="0.035" min="0" step="0.001"></label>
@@ -335,7 +338,7 @@ function loadTexts(items, isSample) {
     const rows = Core.parseCSV(it.text);
     if (/monthly[ _-]*cost/i.test(it.name)) {
       const v = Core.parseCost(rows);
-      if (v == null) errors.push(it.name + ': tidak ada angka biaya.'); else { $('costNow').value = Math.round(v * 100) / 100; $('priceMode').value = 'detect'; S.costFile = it.name; }
+      if (v == null) errors.push(it.name + ': tidak ada angka biaya.'); else { $('costNow').value = Math.round(v * 100) / 100; $('priceManualOn').checked = false; S.costFile = it.name; }
       continue;
     }
     if (Core.isReplicas(rows, it.name)) {
@@ -393,13 +396,13 @@ function renderStatus() {
 function loadedReq(k) { const d = S.data[k]; return d && d.res ? num('req-' + k) : num('xreq-' + k); }
 function getPrices() {
   const man = { core: num('priceCore'), gib: num('priceGiB'), mode: 'manual' };
-  if ($('priceMode').value !== 'detect') return man;
+  if ($('priceManualOn').checked) return man;
   const p = Core.detectPrices({ cost: num('costNow'), pods: num('pods'), hours: HOURS, reqCpu: loadedReq('cpu'), reqMem: loadedReq('memory'), ratio: num('ratio') });
   if (p.error) return Object.assign(man, { warn: p.error });
   return { core: p.priceCore, gib: p.priceGiB, mode: 'detect' };
 }
 function renderPrices() {
-  const detect = $('priceMode').value === 'detect';
+  const detect = !$('priceManualOn').checked;
   $('priceManual').hidden = detect; $('priceDetect').hidden = !detect;
   for (const k of KINDS) $('xwrap-' + k).hidden = !(detect && !(S.data[k] && S.data[k].res));
   const o = $('priceOut'), p = S.prices;
@@ -649,7 +652,7 @@ const drop = $('drop');
 drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
 $('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps()), true); focusSummary(); });
 $('pods').addEventListener('input', () => { S.podsTouched = true; });
-for (const id of ['target', 'margin', 'warnPct', 'critPct', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceMode', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
+for (const id of ['target', 'margin', 'warnPct', 'critPct', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
 for (const k of KINDS) {
   for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
   $('cv-' + k).addEventListener('mousemove', e => hover(k, e));
