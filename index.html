@@ -115,7 +115,9 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
 .ralert .est{color:var(--muted);font-size:.8rem}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
 .dot.w{background:var(--warn)} .dot.c{background:var(--bad)}
-.sumpanel pre{margin:10px 0 0}
+.sumpanel pre{margin:8px 0 0}
+.snip{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px;font-weight:600}
+.snipbar{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .sub2{margin:0 0 10px;color:var(--muted);font-size:.9rem;max-width:75ch}
 .pricebox{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .pricebox h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;font-weight:600}
@@ -164,6 +166,16 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
         <label class="f">Jumlah pod rata-rata<input type="number" id="pods" value="2" min="0.1" step="0.1"></label>
       </div>
       <div class="pricebox">
+        <h3>Sidecar di pod (opsional)</h3>
+        <p class="hint" style="margin:0 0 8px">Angka di tool adalah total pod. Kalau pod punya container lain (misal nginx), isi request dan limit-nya supaya snippet <code>resources</code> hanya berisi bagian container utama.</p>
+        <div class="settings" style="margin-top:0">
+          <label class="f">CPU request sidecar (m)<input type="number" id="scCpuReq" value="0" min="0" step="1"></label>
+          <label class="f">CPU limit sidecar (m)<input type="number" id="scCpuLim" value="0" min="0" step="1"></label>
+          <label class="f">Memory request sidecar (MiB)<input type="number" id="scMemReq" value="0" min="0" step="1"></label>
+          <label class="f">Memory limit sidecar (MiB)<input type="number" id="scMemLim" value="0" min="0" step="1"></label>
+        </div>
+      </div>
+      <div class="pricebox">
         <h3>Harga untuk hitung biaya</h3>
         <div class="settings" style="margin-top:0">
           <label class="f">Cara menentukan harga<select id="priceMode"><option value="manual">Isi sendiri</option><option value="detect">Hitung dari biaya sekarang</option></select></label>
@@ -188,10 +200,15 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
     <h2 id="h-sum">Ringkasan dan rekomendasi</h2>
     <div class="hero" id="hero"></div>
     <div class="recgrid" id="recgrid"></div>
-    <details style="margin:0"><summary>Contoh konfigurasi alert</summary>
-      <p class="hint" style="margin:8px 0 0">Format blok <code>alerts</code> pada Helm values. Satu blok hanya punya satu <code>target</code>, jadi contoh ini memakai level critical. Untuk level warning, buat alert kedua. Sesuaikan dengan chart kamu.</p>
+    <details style="margin:0" open><summary>Snippet konfigurasi untuk disalin</summary>
+      <p class="hint" style="margin:8px 0 0">Format Helm values. Sesuaikan dengan chart kamu. Angka resources sudah dikurangi sidecar kalau kamu mengisinya di Pengaturan.</p>
+      <h3 class="snip">resources</h3>
+      <pre id="resyaml"></pre>
+      <div class="snipbar"><button class="btn ghost" type="button" id="copyRes">Salin resources</button><span class="hint" id="copiedRes"></span></div>
+      <h3 class="snip">alerts</h3>
+      <p class="hint" style="margin:0">Satu blok hanya punya satu <code>target</code>, jadi contoh ini memakai level critical. Untuk warning, buat alert kedua.</p>
       <pre id="alertyaml"></pre>
-      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn ghost" type="button" id="copyAlert">Salin</button><span class="hint" id="copiedAlert"></span></div>
+      <div class="snipbar"><button class="btn ghost" type="button" id="copyAlert">Salin alerts</button><span class="hint" id="copiedAlert"></span></div>
     </details>
   </section>
 
@@ -426,6 +443,16 @@ function renderSummary(plans) {
     else y.push('  memory:', '    frequency: 5m', `    message: High memory on pod detected. More than ${crit}MiB`, '    queryRange: 5m', `    target: ${crit}`, '    type: max');
   }
   $('alertyaml').textContent = y.join('\n');
+  const sc = { cpu: { req: num('scCpuReq'), lim: num('scCpuLim') }, memory: { req: num('scMemReq'), lim: num('scMemLim') } };
+  const hasSc = sc.cpu.req + sc.cpu.lim + sc.memory.req + sc.memory.lim > 0;
+  const mReq = (k, p) => Math.max(1, Math.ceil(p.recReq - sc[k].req));
+  const mLim = (k, p) => Math.max(mReq(k, p), Math.ceil(p.recLim - sc[k].lim));
+  const val = (k, v) => k === 'cpu' ? v + 'm' : v + 'Mi';
+  const r = [];
+  if (hasSc) r.push('# Container utama = total pod dikurangi sidecar.', '# Total pod (request / limit): ' + plans.map(({ k, p }) => `${k} ${val(k, Math.ceil(p.recReq))} / ${val(k, Math.ceil(p.recLim))}`).join(', '));
+  r.push('resources:', '  limits:'); plans.forEach(({ k, p }) => r.push(`    ${k}: ${val(k, mLim(k, p))}`));
+  r.push('  requests:'); plans.forEach(({ k, p }) => r.push(`    ${k}: ${val(k, mReq(k, p))}`));
+  $('resyaml').textContent = r.join('\n');
 }
 function renderKind(k) {
   const d = S.data[k], res = d.res, u = res.unit, c = cfg(k);
@@ -613,7 +640,7 @@ const drop = $('drop');
 drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
 $('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps()), true); focusSummary(); });
 $('pods').addEventListener('input', () => { S.podsTouched = true; });
-for (const id of ['target', 'margin', 'warnPct', 'critPct', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceMode', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
+for (const id of ['target', 'margin', 'warnPct', 'critPct', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceMode', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
 for (const k of KINDS) {
   for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
   $('cv-' + k).addEventListener('mousemove', e => hover(k, e));
@@ -621,12 +648,15 @@ for (const k of KINDS) {
   document.querySelector(`[data-chart="${k}"]`).addEventListener('toggle', () => drawChart(k, S.plot[k] && S.plot[k].c));
   new ResizeObserver(() => drawChart(k, S.plot[k] && S.plot[k].c)).observe($('cv-' + k).parentElement);
 }
-$('copyAlert').addEventListener('click', async () => {
-  const txt = $('alertyaml').textContent;
-  try { await navigator.clipboard.writeText(txt); $('copiedAlert').textContent = 'Tersalin.'; }
-  catch (e) { const r = document.createRange(); r.selectNodeContents($('alertyaml')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $('copiedAlert').textContent = 'Teks sudah dipilih, tekan Ctrl+C atau Cmd+C.'; }
-  setTimeout(() => { $('copiedAlert').textContent = ''; }, 3000);
-});
+function wireCopy(btn, pre, msg) {
+  $(btn).addEventListener('click', async () => {
+    const txt = $(pre).textContent;
+    try { await navigator.clipboard.writeText(txt); $(msg).textContent = 'Tersalin.'; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($(pre)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $(msg).textContent = 'Teks sudah dipilih, tekan Ctrl+C atau Cmd+C.'; }
+    setTimeout(() => { $(msg).textContent = ''; }, 3000);
+  });
+}
+wireCopy('copyAlert', 'alertyaml', 'copiedAlert'); wireCopy('copyRes', 'resyaml', 'copiedRes');
 const redraw = () => { KINDS.forEach(k => drawChart(k, S.plot[k] && S.plot[k].c)); drawPods(); };
 $('cv-pods').addEventListener('mousemove', hoverPods);
 $('cv-pods').addEventListener('mouseleave', leavePods);
