@@ -185,6 +185,7 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
         <label class="f"><span><span data-i18n="s_margin"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_margin">i</span></span><input type="number" id="margin" value="5" min="0" max="50" step="1"></label>
         <label class="f"><span><span data-i18n="s_basis"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_basis">i</span></span><select id="basis"><option value="p95">p95</option><option value="p99" selected>p99</option><option value="max" data-i18n="opt_max"></option></select></label>
         <label class="f"><span><span data-i18n="s_buffer"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_buffer">i</span></span><input type="number" id="buffer" value="15" min="0" max="100" step="1"></label>
+        <label class="f"><span><span data-i18n="s_podpct"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_podpct">i</span></span><select id="podPctCpu"><option value="p95">p95</option><option value="p99" selected>p99</option></select></label>
         <label class="f"><span><span data-i18n="s_mult"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_mult">i</span></span><input type="number" id="mult" value="2" min="1" max="5" step="0.1"></label>
         <label class="f"><span data-i18n="s_min"></span><input type="number" id="minReq" value="25" min="0" step="1"></label>
         <label class="f"><span data-i18n="s_warn"></span><input type="number" id="warnPct" value="80" min="1" max="200" step="1"></label>
@@ -344,7 +345,7 @@ const I18N = {
     th_series: 'Seri', th_last: 'Terakhir', th_min: 'Min', th_median: 'Median', th_max: 'Maks', th_pts: 'Titik',
     req_now: 'Request sekarang ({u})', lim_now: 'Limit sekarang ({u})', fill_req: 'Isi request sekarang untuk melihat rekomendasi.',
     chips: 'Revisi pod yang dihitung:',
-    why_hpa: 'HPA: rata-rata antar pod {b} {v} ÷ {p}% = {r}', why_pod: 'Pod tunggal: p99 {v} + {b}% = {r}', why_min: 'Minimum: {v}', used: '(dipakai)',
+    why_hpa: 'HPA: rata-rata antar pod {b} {v} ÷ {p}% = {r}', why_pod: 'Pod tunggal: {pp} {v} + {b}% = {r}', why_min: 'Minimum: {v}', used: '(dipakai)',
     basis_max: 'maks',
     check: 'Dengan request {r}: rata-rata maks {m}% dari request (target {t}%), {o}% waktu di atas target.',
     st_ok: 'Aman', st_warn: 'Mepet', st_bad: 'Scale-up',
@@ -377,6 +378,7 @@ const I18N = {
     t_cpu_status: 'Status CPU', t_mem_status: 'Status memory', stc_throttle: 'Lambat (throttle)', stc_near: 'Hampir throttle', stc_burst: 'Burst, aman', stc_ok: 'Optimal', stc_waste: 'Boros',
     stm_oom: 'Pod mati (OOM)', stm_near: 'Hampir OOM', stm_evict: 'Aman, risiko evict',
     tip_check: 'Perkiraan seberapa sering rata-rata antar pod melewati target, artinya HPA bisa menambah pod. Lonjakan serentak (deploy, traffic naik) tetap bisa memicunya walau p99 aman. Untuk CPU, HPA mengabaikan sebagian metrik pod yang baru mulai, jadi angka ini cenderung lebih tinggi dari kenyataan.',
+    s_podpct: 'Pod tunggal CPU di', tip_podpct: 'Persentil pod tunggal untuk request CPU. p99 lebih aman, p95 lebih hemat. CPU bisa burst sampai limit sehingga lebih toleran. Memory selalu p99 karena pod di-OOM kill kalau melewati limit.',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -442,7 +444,7 @@ const I18N = {
     th_series: 'Series', th_last: 'Last', th_min: 'Min', th_median: 'Median', th_max: 'Max', th_pts: 'Points',
     req_now: 'Current request ({u})', lim_now: 'Current limit ({u})', fill_req: 'Enter the current request to see recommendations.',
     chips: 'Pod revisions included:',
-    why_hpa: 'HPA: cross-pod average {b} {v} ÷ {p}% = {r}', why_pod: 'Single pod: p99 {v} + {b}% = {r}', why_min: 'Minimum: {v}', used: '(used)',
+    why_hpa: 'HPA: cross-pod average {b} {v} ÷ {p}% = {r}', why_pod: 'Single pod: {pp} {v} + {b}% = {r}', why_min: 'Minimum: {v}', used: '(used)',
     basis_max: 'max',
     check: 'With request {r}: average peaks at {m}% of request (target {t}%), {o}% of time above target.',
     st_ok: 'Safe', st_warn: 'Tight', st_bad: 'Scale-up',
@@ -475,6 +477,7 @@ const I18N = {
     t_cpu_status: 'CPU status', t_mem_status: 'Memory status', stc_throttle: 'Throttled', stc_near: 'Near throttle', stc_burst: 'Burst, safe', stc_ok: 'Optimal', stc_waste: 'Over-provisioned',
     stm_oom: 'OOM kill', stm_near: 'Near OOM', stm_evict: 'Safe, evict risk',
     tip_check: 'Estimate of how often the cross-pod average passes the target, meaning HPA may add pods. Simultaneous bursts (deploys, traffic surges) can still trigger it even when p99 looks safe. For CPU, HPA ignores some metrics of pods that just started, so this figure tends to be higher than reality.',
+    s_podpct: 'Single pod CPU at', tip_podpct: 'Single pod percentile for the CPU request. p99 is safer, p95 is cheaper. CPU can burst up to the limit so it is more forgiving. Memory is always p99 because a pod is OOM killed when it passes the limit.',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -661,7 +664,7 @@ function renderPrices() {
 /* ---------- render ---------- */
 const roundRule = k => { const K = k === 'cpu' ? 'Cpu' : 'Mem'; return { mode: $('rnd' + K + 'Mode').value, step: num('rnd' + K + 'Step') }; };
 function cfg(k) {
-  return { round: roundRule(k), kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
+  return { round: roundRule(k), podPct: k === 'cpu' ? $('podPctCpu').value : 'p99', kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
     buffer: num('buffer'), mult: num('mult') || 2, warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: num('pods'),
     hours: HOURS, priceCore: S.prices.core, priceGiB: S.prices.gib };
 }
@@ -800,7 +803,7 @@ function renderKind(k) {
   const bl = c.basis === 'max' ? t('basis_max') : c.basis;
   const li = (txt, on) => why.appendChild(el('li', on ? 'bind' : '', txt + (on ? ' ' + t('used') : '')));
   li(t('why_hpa', { b: bl, v: fmt(p.avgBasis), p: c.target - c.margin, r: `${fmt(p.reqHpa)} ${u}` }), p.binds === 'hpa');
-  li(t('why_pod', { v: fmt(sm.pooled.p99), b: c.buffer, r: `${fmt(p.reqPod)} ${u}` }), p.binds === 'pod');
+  li(t('why_pod', { pp: c.podPct, v: fmt(sm.pooled[c.podPct]), b: c.buffer, r: `${fmt(p.reqPod)} ${u}` }), p.binds === 'pod');
   li(t('why_min', { v: `${fmt(c.min)} ${u}` }), p.binds === 'min');
   if (p.pre !== p.raw) why.appendChild(el('li', '', t('why_round', { a: `${fmt(p.pre)} ${u}`, b: `${fmt(p.raw)} ${u}` })));
   check.append(document.createTextNode(t('check', { r: `${fmt(p.recReq)} ${u}`, m: fmt(p.after.max), t: c.target, o: fmt(p.after.overPct) })), el('span', 'pill ' + p.after.st, t('st_' + p.after.st)), tipEl('tip_check'));
@@ -962,7 +965,7 @@ function batchAdd(podItems) {
       if (res.error || !(res.request > 0)) continue;
       const pd = podsOf(res); pods = pods || pd;
       const c = { kind, req: res.request, lim: res.limit || 0, target: num('target') || 80, margin: num('margin'), basis: $('basis').value, buffer: num('buffer'), mult: num('mult') || 2,
-        warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: pd.avg, hours: HOURS, priceCore: prices.core, priceGiB: prices.gib, round: roundRule(kind) };
+        warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: pd.avg, hours: HOURS, priceCore: prices.core, priceGiB: prices.gib, round: roundRule(kind), podPct: kind === 'cpu' ? $('podPctCpu').value : 'p99' };
       parts[kind] = partFromPlan(c, Core.plan(res, c));
     }
     if (!parts.cpu && !parts.memory) continue;
@@ -1130,7 +1133,7 @@ const drop = $('drop');
 drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
 $('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; S.costFile = ''; loadTexts(sampleItems(), true); focusSummary(); });
 $('pods').addEventListener('input', () => { S.podsTouched = true; });
-for (const id of ['target', 'margin', 'warnPct', 'critPct', 'rndCpuMode', 'rndCpuStep', 'rndMemMode', 'rndMemStep', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'nameMain', 'nameSide', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
+for (const id of ['target', 'margin', 'warnPct', 'critPct', 'podPctCpu', 'rndCpuMode', 'rndCpuStep', 'rndMemMode', 'rndMemStep', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'nameMain', 'nameSide', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
 for (const k of KINDS) {
   for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
   $('cv-' + k).addEventListener('mousemove', e => hover(k, e));

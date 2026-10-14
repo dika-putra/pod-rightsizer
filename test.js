@@ -82,4 +82,14 @@ const bad = Core.analyze(Core.parseCSV('Time,p-aaaaaaaa-11111,requests,limits\n1
 assert.strictEqual(bad.kind, 'memory');
 assert.strictEqual(bad.request, 50);
 assert.strictEqual(bad.limit, null);
+// Persentil pod tunggal: p95 atau p99 (default p99). 100 sampel, 95 bernilai 100 dan 5 bernilai 200.
+const pv = ['Time,p-aaaaaaaa-11111,requests,limits'];
+for (let i = 0; i < 100; i++) pv.push(`${1790000000000 + i * 120000},${i < 95 ? 100 : 200},500,1000`);
+const pres = Core.analyze(Core.parseCSV(pv.join('\n')), { filename: 'CPU.csv' });
+const pbase = { kind: 'cpu', req: 500, lim: 1000, target: 80, margin: 5, basis: 'p95', buffer: 15, mult: 2, min: 25, pods: 1, hours: 730, priceCore: 0.035, priceGiB: 0.005 };
+const p99 = Core.plan(pres, pbase), p95 = Core.plan(pres, { ...pbase, podPct: 'p95' });
+assert.strictEqual(p99.reqPod, 230);   // ceil(200 * 1.15)
+assert.strictEqual(p95.reqPod, 121);   // ceil(105 * 1.15)
+assert.strictEqual(p99.recReq < 500, true);
+assert.ok(p95.recReq <= p99.recReq);
 console.log('ok');

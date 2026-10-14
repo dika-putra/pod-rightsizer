@@ -80,6 +80,7 @@ The Jumlah pod section shows min, median, max and last value of each series, plu
 | Safety margin | 5 points |
 | Average percentile | p99 |
 | Single pod buffer | 15% |
+| Single pod percentile | p99 (CPU can be set to p95, memory is always p99) |
 | Limit multiplier | 2 |
 | Rounding (CPU and memory, separate) | step of 25, rounded up (free, step of N, or power of 2) |
 | Alert warning / critical | 80% / 90% of request |

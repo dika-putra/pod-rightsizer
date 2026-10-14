@@ -233,7 +233,7 @@
     const sm = summarize(res, { req: c.req, lim: c.lim, target: c.target, margin: c.margin });
     const avgBasis = sm.avg[c.basis];
     const reqHpa = Math.ceil(avgBasis / ((c.target - c.margin) / 100));
-    const reqPod = Math.ceil(sm.pooled.p99 * (1 + c.buffer / 100));
+    const reqPod = Math.ceil(sm.pooled[c.podPct === 'p95' ? 'p95' : 'p99'] * (1 + c.buffer / 100));
     const pre = Math.max(c.min, reqHpa, reqPod);
     const binds = pre === reqHpa ? 'hpa' : pre === reqPod ? 'pod' : 'min';
     const raw = roundUp(pre, c.round);
