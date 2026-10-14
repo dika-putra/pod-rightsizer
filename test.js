@@ -43,4 +43,7 @@ assert.deepStrictEqual(Core.podCounts(res).slice(0, 2).map(x => x.v), [1, 2]);
 // Alert 80% dan 90% dari request 734 (hasil plan di atas): 587.2 dan 660.6 MiB. Pod tunggal maksimal 600, jadi tidak ada yang melewati.
 assert.ok(Math.abs(p.alert.warn - 587.2) < 1e-6 && Math.abs(p.alert.crit - 660.6) < 1e-6);
 assert.ok(p.alert.warnSamples > 0 && p.alert.warnSamples < 100 && p.alert.critSamples === 0);
+// CSV Monthly Cost: satu angka, dengan atau tanpa tanda dolar.
+assert.strictEqual(Core.parseCost(Core.parseCSV('Time,Value\n1790000000000,89.4')), 89.4);
+assert.strictEqual(Core.parseCost(Core.parseCSV('Time,Value\n1790000000000,$12.30')), 12.3);
 console.log('ok');

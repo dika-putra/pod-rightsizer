@@ -149,9 +149,13 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
       <input class="vh" type="file" id="file" accept=".csv,text/csv" multiple>
       <label class="btn" for="file">Pilih file CSV</label>
       <button class="btn ghost" type="button" id="sample">Pakai data contoh</button>
-      <span class="hint">Boleh pilih beberapa file sekaligus: CPU, Memory, dan jumlah pod (Pod Available, Pod Desired). File dibaca di browser, tidak diunggah ke mana pun.</span>
+      <span class="hint">Boleh pilih beberapa file sekaligus: CPU, Memory, jumlah pod (Pod Available, Pod Desired), dan Monthly Cost. File dibaca di browser, tidak diunggah ke mana pun.</span>
     </div>
     <ul id="status" role="status"></ul>
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;max-width:300px">
+      <label class="f">Biaya service sekarang ($ per bulan)<input type="number" id="costNow" min="0" step="any" placeholder="misal 89.40"></label>
+      <span class="hint">Dipakai untuk menghitung harga CPU dan memory secara otomatis. Ambil dari panel Monthly Cost $, atau unggah CSV panel itu.</span>
+    </div>
     <details id="settings">
       <summary>Pengaturan</summary>
       <div class="settings">
@@ -178,20 +182,19 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
       <div class="pricebox">
         <h3>Harga untuk hitung biaya</h3>
         <div class="settings" style="margin-top:0">
-          <label class="f">Cara menentukan harga<select id="priceMode"><option value="manual">Isi sendiri</option><option value="detect">Hitung dari biaya sekarang</option></select></label>
+          <label class="f">Cara menentukan harga<select id="priceMode"><option value="detect" selected>Hitung dari biaya sekarang</option><option value="manual">Isi sendiri</option></select></label>
         </div>
         <div class="settings" id="priceManual">
           <label class="f">Harga CPU ($ per core-jam)<input type="number" id="priceCore" value="0.035" min="0" step="0.001"></label>
           <label class="f">Harga Memory ($ per GiB-jam)<input type="number" id="priceGiB" value="0.005" min="0" step="0.001"></label>
         </div>
         <div class="settings" id="priceDetect" hidden>
-          <label class="f">Biaya service sekarang ($ per bulan)<input type="number" id="costNow" min="0" step="any" placeholder="misal 89.40"></label>
           <label class="f">Rasio harga Memory per GiB ÷ CPU per core<input type="number" id="ratio" value="0.14" min="0.001" step="0.01"></label>
           <label class="f" id="xwrap-cpu" hidden>Request CPU sekarang (m)<input type="number" id="xreq-cpu" min="0" step="any"></label>
           <label class="f" id="xwrap-memory" hidden>Request Memory sekarang (MiB)<input type="number" id="xreq-memory" min="0" step="any"></label>
         </div>
         <p class="hint" id="priceOut" style="margin:10px 0 0"></p>
-        <p class="hint" style="margin:6px 0 0">Satu angka biaya tidak cukup untuk dua harga, jadi harga Memory dihitung dari rasio terhadap harga CPU. Rasio 0.14 hanya contoh, ganti kalau kamu tahu rasio sebenarnya. Biaya sekarang bisa diambil dari panel Monthly Cost $ di dashboard. Jumlah pod diisi otomatis dari rata-rata pod bersamaan di data.</p>
+        <p class="hint" style="margin:6px 0 0">Satu angka biaya tidak cukup untuk dua harga, jadi harga Memory dihitung dari rasio terhadap harga CPU. Rasio 0.14 hanya contoh, ganti kalau kamu tahu rasio sebenarnya. Jumlah pod diisi otomatis dari rata-rata pod bersamaan di data.</p>
       </div>
     </details>
   </section>
@@ -231,7 +234,7 @@ const $ = id => document.getElementById(id);
 const KINDS = ['cpu', 'memory'];
 const NAME = { cpu: 'CPU', memory: 'Memory' };
 const HOURS = 730;
-const S = { data: { cpu: null, memory: null }, reps: [], podsTouched: false, plot: {}, podPlot: null, podList: [], prices: { core: 0.035, gib: 0.005, mode: 'manual' } };
+const S = { data: { cpu: null, memory: null }, reps: [], costFile: '', podsTouched: false, plot: {}, podPlot: null, podList: [], prices: { core: 0.035, gib: 0.005, mode: 'manual' } };
 
 const nf = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
@@ -330,6 +333,11 @@ function loadTexts(items, isSample) {
   const errors = [];
   for (const it of items) {
     const rows = Core.parseCSV(it.text);
+    if (/monthly[ _-]*cost/i.test(it.name)) {
+      const v = Core.parseCost(rows);
+      if (v == null) errors.push(it.name + ': tidak ada angka biaya.'); else { $('costNow').value = Math.round(v * 100) / 100; $('priceMode').value = 'detect'; S.costFile = it.name; }
+      continue;
+    }
     if (Core.isReplicas(rows, it.name)) {
       const a = Core.analyzeSeries(rows, it.name);
       if (a.error) { errors.push(it.name + ': ' + a.error); continue; }
@@ -374,6 +382,7 @@ function renderStatus() {
     if (d.sample) li.append(el('span', 'badge', 'Data contoh, bukan data asli'));
     ul.appendChild(li);
   }
+  if (S.costFile) { const li = el('li'); li.append(el('b', '', 'Biaya'), document.createTextNode(` · ${S.costFile} · ${usd(num('costNow'))} per bulan`)); ul.appendChild(li); }
   for (const r of S.reps) {
     const li = el('li'); li.append(el('b', '', 'Jumlah pod'), document.createTextNode(` · ${r.label} · ${r.pts.length} titik waktu`));
     if (r.sample) li.append(el('span', 'badge', 'Data contoh, bukan data asli'));
@@ -416,7 +425,7 @@ function renderSummary(plans) {
   const now = plans.reduce((s, x) => s + x.p.costNow, 0), nw = plans.reduce((s, x) => s + x.p.costNew, 0), sv = now - nw;
   const hero = $('hero'); hero.className = 'hero' + (sv < 0 ? ' warn' : ''); hero.textContent = '';
   hero.append(el('span', 'tag', sv < 0 ? 'Estimasi biaya naik per bulan' : 'Estimasi hemat per bulan'), el('div', 'big', usd(Math.abs(sv))),
-    el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '') + (plans.length < 2 ? '. Hanya resource yang dimuat yang dihitung.' : '')));
+    el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '') + (plans.length < 2 ? '. Hanya resource yang dimuat yang dihitung.' : '') + (S.prices.warn ? '. Memakai harga contoh karena biaya sekarang belum diisi, jadi angka biaya belum akurat.' : '')));
   const grid = $('recgrid'); grid.textContent = '';
   for (const { k, p } of plans) {
     const c = cfg(k), u = k === 'cpu' ? 'm' : 'MiB', a = p.alert, card = el('div', 'rcard');

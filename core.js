@@ -246,6 +246,22 @@
     return { last: pts[pts.length - 1].v, min: v[0], median: pct(v, .5), max: v[v.length - 1], n: pts.length };
   }
 
+  // CSV panel Monthly Cost: satu angka. Ambil angka terakhir di baris terakhir yang berisi angka (selain kolom Time).
+  function parseCost(rows) {
+    if (!rows || rows.length < 2) return null;
+    const h = rows[0].map(x => String(x).trim());
+    let ti = h.findIndex(x => /^time$/i.test(x));
+    if (ti < 0) ti = 0;
+    for (let r = rows.length - 1; r >= 1; r--) {
+      for (let j = rows[r].length - 1; j >= 0; j--) {
+        if (j === ti) continue;
+        const c = readCell(String(rows[r][j]).replace(/^\s*\$/, ''));
+        if (c && c.v >= 0) return c.v;
+      }
+    }
+    return null;
+  }
+
   // Harga per core-jam dan per GiB-jam dari biaya service sekarang.
   // Satu biaya tidak cukup untuk dua harga, jadi rasio harga memory terhadap CPU dipakai sebagai asumsi.
   // biaya = pod x jam x (core x hargaCore + GiB x hargaCore x rasio)
@@ -259,7 +275,7 @@
     return { priceCore, priceGiB: priceCore * o.ratio };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices };
+  const Core = { parseCSV, analyze, summarize, simulate, plan, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);
