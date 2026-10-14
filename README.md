@@ -52,7 +52,7 @@ The summary also suggests per-pod alert thresholds as a percentage of the recomm
 
 ### Service table
 
-Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Copy rows gives rows without a header and starting from the Week column (no service name or link), in table order, so you can paste them next to services already listed in your sheet. Download CSV has the same columns with a header.
+Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Copy rows gives rows without a header and starting from the Week column (no service name or link), in table order, so you can paste them next to services already listed in your sheet. Download CSV has all columns with a header, starting from the service.
 
 To add many services at once, choose several CSV files in one go. Pod names in the CSV (`<service>-<hash>-<id>`) identify the service, so CPU and memory files of the same service are paired and one row is added per service. A service's real monthly cost can be typed into the Current cost cell of its row, which recalculates its saving. Without it the row uses the standard price estimate. A row with the same service and week is replaced.
 
@@ -80,6 +80,7 @@ The Jumlah pod section shows min, median, max and last value of each series, plu
 | Rounding (CPU and memory, separate) | step of 25, rounded up (free, step of N, or power of 2) |
 | Alert warning / critical | 80% / 90% of request |
 | Sidecar request and limit | 0 (none) |
+| Container names | main: the detected service name, sidecar: `nginx` |
 | Minimum request | 25 |
 | Average pod count | taken from the data |
 | CPU price | $0.035 per core-hour (example value) |
