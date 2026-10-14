@@ -195,7 +195,60 @@
     return { sm, avgBasis, reqHpa, reqPod, raw, binds, change, dir, recReq, recLim, limitRisk, costNow, costNew, saving: costNow - costNew, after };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, pct, asc };
+  // CSV jumlah pod dari panel Grafana (Pod Available, Pod Desired, Min Pods, Max Pods, dst.).
+  // Bedanya dengan CSV CPU/Memory: tidak ada kolom bernama pod.
+  const PODCOL = /-[a-z0-9]{6,10}-[a-z0-9]{5}$/;
+  function isReplicas(rows, filename) {
+    const fn = (filename || '').toLowerCase();
+    if (/(cpu|memory)[ _-]*usage/.test(fn)) return false;
+    if (/pod[ _-]*(available|desired)|min[ _-]*pods|max[ _-]*pods|replica|hpa/.test(fn)) return true;
+    if (!rows || rows.length < 2) return false;
+    const h = rows[0].map(x => String(x).trim()).filter(x => !/^time$/i.test(x));
+    return h.length <= 6 && !h.some(x => PODCOL.test(x)) && !/cpu|memory/.test(fn);
+  }
+  function labelFromFile(filename) {
+    return String(filename || 'pod').replace(/^.*[\\/]/, '').replace(/\.csv$/i, '').replace(/-data-as-.*$/i, '').replace(/[-_]data$/i, '').trim() || 'pod';
+  }
+  function analyzeSeries(rows, filename) {
+    if (!rows || rows.length < 2) return { error: 'File kosong atau hanya berisi header.' };
+    const h = rows[0].map(x => String(x).trim());
+    let ti = h.findIndex(x => /^time$/i.test(x));
+    if (ti < 0) ti = 0;
+    const idx = h.map((_, j) => j).filter(j => j !== ti);
+    const out = [];
+    for (const j of idx) {
+      const pts = [];
+      for (let r = 1; r < rows.length; r++) {
+        const c = readCell(rows[r][j]), t = parseTime(rows[r][ti]);
+        if (c && t != null) pts.push({ t, v: c.v });
+      }
+      if (pts.length) out.push({ label: idx.length === 1 ? labelFromFile(filename) : h[j], pts });
+    }
+    return out.length ? { series: out } : { error: 'Tidak ada kolom berisi angka.' };
+  }
+  // Jumlah pod yang punya data di tiap waktu, dari CSV CPU atau Memory.
+  function podCounts(res) {
+    return res.series.filter(x => x.t != null).map(x => ({ t: x.t, v: x.n }));
+  }
+  function seriesStats(pts) {
+    const v = asc(pts.map(p => p.v));
+    return { last: pts[pts.length - 1].v, min: v[0], median: pct(v, .5), max: v[v.length - 1], n: pts.length };
+  }
+
+  // Harga per core-jam dan per GiB-jam dari biaya service sekarang.
+  // Satu biaya tidak cukup untuk dua harga, jadi rasio harga memory terhadap CPU dipakai sebagai asumsi.
+  // biaya = pod x jam x (core x hargaCore + GiB x hargaCore x rasio)
+  function detectPrices(o) {
+    if (!(o.cost > 0)) return { error: 'Isi biaya sekarang per bulan.' };
+    if (!(o.pods > 0)) return { error: 'Isi jumlah pod.' };
+    if (!(o.reqCpu > 0) || !(o.reqMem > 0)) return { error: 'Butuh request CPU dan Memory.' };
+    if (!(o.ratio > 0)) return { error: 'Isi rasio harga.' };
+    const base = o.pods * o.hours * (o.reqCpu / 1000 + o.reqMem / 1024 * o.ratio);
+    const priceCore = o.cost / base;
+    return { priceCore, priceGiB: priceCore * o.ratio };
+  }
+
+  const Core = { parseCSV, analyze, summarize, simulate, plan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);

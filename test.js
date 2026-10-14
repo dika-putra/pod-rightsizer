@@ -27,4 +27,17 @@ assert.strictEqual(cpu.kind, 'cpu');
 const pc = Core.plan(cpu, { kind: 'cpu', req: 25, lim: 100, target: 80, margin: 5, basis: 'p99', buffer: 15, mult: 2, min: 25, pods: 1, hours: 730, priceCore: 0.035, priceGiB: 0.005 });
 assert.strictEqual(pc.recReq, 25);
 assert.strictEqual(pc.dir, 'tetap');
+// Harga dari biaya: 2 pod x 730 jam x (1 core + 1 GiB x 0.2) x harga = 1752 x harga.
+const dp = Core.detectPrices({ cost: 175.2, pods: 2, hours: 730, reqCpu: 1000, reqMem: 1024, ratio: 0.2 });
+assert.ok(Math.abs(dp.priceCore - 0.1) < 1e-9 && Math.abs(dp.priceGiB - 0.02) < 1e-9);
+assert.ok(Core.detectPrices({ cost: 10, pods: 2, hours: 730, reqCpu: 0, reqMem: 1024, ratio: 0.2 }).error);
+
+// CSV jumlah pod: satu kolom nilai, labelnya diambil dari nama file.
+const pr = Core.parseCSV('Time,Value\n1790000000000,2\n1790000120000,3');
+assert.ok(Core.isReplicas(pr, 'Pod Available-data-as-joinbyfield-2026-10-13 09_56_45.csv'));
+assert.ok(!Core.isReplicas(Core.parseCSV(rows), 'Memory Usage-data.csv'));
+const rs = Core.analyzeSeries(pr, 'Pod Available-data-as-joinbyfield-2026-10-13 09_56_45.csv');
+assert.strictEqual(rs.series[0].label, 'Pod Available');
+assert.deepStrictEqual(Core.seriesStats(rs.series[0].pts), { last: 3, min: 2, median: 2.5, max: 3, n: 2 });
+assert.deepStrictEqual(Core.podCounts(res).slice(0, 2).map(x => x.v), [1, 2]);
 console.log('ok');

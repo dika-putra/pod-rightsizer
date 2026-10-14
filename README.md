@@ -22,6 +22,8 @@ Then open http://localhost:8765. The page starts with sample data so you can see
 4. Turn **Formatted data** off, so values are plain numbers without `MiB` or `milicore`.
 5. Click Download CSV. Repeat for the other panel to analyze CPU and memory together.
 
+You can also upload pod count CSVs, for example from the Pod Available and Pod Desired panels. Any CSV with a Time column and numeric columns works. With one value column, the series is named after the file name.
+
 Formatted exports (`470 MiB`, `23.6 milicore`) are also read. The CSV needs one column per pod. Columns named `requests` and `limits` are used as the current values.
 
 ## How the recommendation works
@@ -40,6 +42,14 @@ The recommended limit is `request x multiplier`. The page warns when that limit 
 
 Cost follows the request: `pods x 730 hours x request x unit price`, with CPU priced per core-hour and memory per GiB-hour. The summary adds up the resources you loaded.
 
+### Prices
+
+Enter the two unit prices yourself, or choose **Hitung dari biaya sekarang** and enter the service's current monthly cost. A single cost cannot give two prices, so the memory price per GiB-hour is derived from a ratio to the CPU price per core-hour (default 0.14, an example value). The detected prices reproduce the cost you entered. This needs the current CPU and memory requests, taken from the loaded CSVs or typed in.
+
+## Pod counts
+
+The Jumlah pod section shows min, median, max and last value of each series, plus a step chart. The first series, pods running, is the number of pods that have data in the CPU or memory CSV at each timestamp. Other series come from the pod count CSVs you upload.
+
 ## Settings
 
 | Setting | Default |
@@ -53,8 +63,9 @@ Cost follows the request: `pods x 730 hours x request x unit price`, with CPU pr
 | Average pod count | taken from the data |
 | CPU price | $0.035 per core-hour (example value) |
 | Memory price | $0.005 per GiB-hour (example value) |
+| Price ratio (detect mode) | 0.14 memory per GiB / CPU per core (example value) |
 
-The prices are examples. Replace them with your cluster's real prices.
+The prices and the ratio are examples. Replace them with your cluster's real values.
 
 ## Limits of the estimate
 
