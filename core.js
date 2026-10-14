@@ -49,6 +49,26 @@
     return m ? m[2] : 'lainnya';
   }
 
+  // Nama service dari header kolom pod (<service>-<hash>-<id>), yang paling banyak muncul. Kosong kalau tidak dikenali.
+  function serviceName(rows) {
+    if (!rows || !rows.length) return '';
+    const counts = new Map();
+    for (const raw of rows[0]) {
+      const name = String(raw).trim();
+      if (/^(time|requests?|limits?)$/i.test(name)) continue;
+      const m = /^(.*)-([a-z0-9]{6,10})-([a-z0-9]{5})$/.exec(name);
+      if (m) counts.set(m[1], (counts.get(m[1]) || 0) + 1);
+    }
+    let best = '', n = 0;
+    for (const [k, v] of counts) if (v > n) { best = k; n = v; }
+    return best;
+  }
+
+  // Biaya per bulan: pod x jam x request x harga. CPU per core-jam (m / 1000), memory per GiB-jam (MiB / 1024).
+  function costFor(kind, req, pods, hours, priceCore, priceGiB) {
+    return pods * hours * (kind === 'cpu' ? req / 1000 * priceCore : req / 1024 * priceGiB);
+  }
+
   function detectKind(rows, podIdx, filename, forced) {
     if (forced && forced !== 'auto') return forced;
     let mem = 0, cpu = 0;
@@ -199,7 +219,7 @@
     const recReq = dir === 'tetap' && c.req > 0 ? c.req : raw;
     const recLim = Math.ceil(recReq * c.mult);
     const limitRisk = recLim < sm.maxPod * 1.1;
-    const unitCost = r => c.pods * c.hours * (c.kind === 'cpu' ? r / 1000 * c.priceCore : r / 1024 * c.priceGiB);
+    const unitCost = r => costFor(c.kind, r, c.pods, c.hours, c.priceCore, c.priceGiB);
     const costNow = unitCost(c.req), costNew = unitCost(recReq);
     const after = simulate(res, c.target, c.margin, [recReq])[0];
     const alert = alertPlan(res, recReq, c.warnPct || 80, c.critPct || 90);
@@ -275,7 +295,7 @@
     return { priceCore, priceGiB: priceCore * o.ratio };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost };
+  const Core = { parseCSV, analyze, summarize, simulate, plan, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices, parseCost, serviceName, costFor };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);

@@ -46,6 +46,12 @@ Cost follows the request: `pods x 730 hours x request x unit price`, with CPU pr
 
 The summary also suggests per-pod alert thresholds as a percentage of the recommended request: warning at 80% and critical at 90% by default. For each threshold it shows how often the loaded data would have crossed it, so you can see whether an alert would be noisy before you create it. The example `alerts` block (message, target, type) is a starting point for Helm values and needs to be adapted to your chart.
 
+### Service table
+
+Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Copy rows gives rows without a header, so you can append them under an existing header.
+
+To add many services at once, choose several CSV files in one go. Pod names in the CSV (`<service>-<hash>-<id>`) identify the service, so CPU and memory files of the same service are paired and one row is added per service. A service's real monthly cost can be typed into the Current cost cell of its row, which recalculates its saving. Without it the row uses the standard price estimate. A row with the same service and week is replaced.
+
 ### Config snippets
 
 The summary has copy-ready `resources` and `alerts` blocks in Helm values format. The numbers in the tool are totals for the whole pod. If the pod has sidecar containers, enter their request and limit in Settings and the `resources` snippet will show the main container only (pod total minus sidecar).

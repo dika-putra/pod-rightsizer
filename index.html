@@ -119,6 +119,15 @@ canvas{display:block;width:100%;height:280px}
 .card{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
 dl.s{margin:0;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
 dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--font-mono)}
+.addbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+.totalline{margin:12px 0 0;font-weight:600}
+.svctbl{margin-top:8px}
+.svctbl th,.svctbl td{padding:6px 8px;font-size:.84rem}
+.svctbl th{white-space:normal;min-width:70px;vertical-align:bottom}
+.svctbl input{padding:4px 6px;font-size:.84rem;min-width:110px}
+.svctbl input.cost{min-width:84px;text-align:right}
+.svctbl td.empty{text-align:center;color:var(--muted);font-family:var(--font-body)}
+.svctbl .del{font:inherit;border:0;background:transparent;color:var(--bad);cursor:pointer;font-weight:700;padding:2px 6px}
 .foot{font-size:.8rem;color:var(--muted);margin:0}
 @media (prefers-reduced-motion:reduce){.drop{transition:none}}
 </style>
@@ -219,6 +228,20 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
     </details>
   </section>
 
+  <section class="panel" id="tablesec" hidden aria-labelledby="h-table">
+    <h2 id="h-table"><span data-i18n="h_table"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_table">i</span></h2>
+    <div class="addbar">
+      <label class="f"><span data-i18n="t_name"></span><input type="text" id="svcName"></label>
+      <label class="f"><span data-i18n="t_linkl"></span><input type="text" id="svcLink"></label>
+      <label class="f"><span data-i18n="t_week"></span><input type="text" id="svcWeek"></label>
+      <button class="btn" type="button" id="addRow" data-i18n="t_add"></button>
+    </div>
+    <p class="hint" id="addHint" style="margin:8px 0 0"></p>
+    <p class="totalline" id="tabletotal"></p>
+    <div class="tablewrap"><table id="svctable" class="svctbl"></table></div>
+    <div class="snipbar"><button class="btn ghost" type="button" id="copyRows" data-i18n="t_copy"></button><button class="btn ghost" type="button" id="dlCsv" data-i18n="t_csv"></button><button class="btn ghost" type="button" id="clearRows" data-i18n="t_clear"></button><span class="hint" id="rowsMsg"></span></div>
+  </section>
+
   <section class="panel" id="podsec" hidden aria-labelledby="h-pods">
     <h2 id="h-pods"><span data-i18n="h_pods"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_podsec">i</span></h2>
     <div class="tablewrap"><table id="podtable"></table></div>
@@ -309,6 +332,18 @@ const I18N = {
     lg_avg: 'rata-rata antar pod', lg_max: 'pod tertinggi', lg_thr: 'ambang HPA ({t}% × request)', lg_req: 'request',
     tt_avg: 'rata-rata', tt_max: 'tertinggi', tt_pods: '{n} pod',
     foot: 'Estimasi, bukan angka resmi.',
+    h_table: 'Tabel service',
+    tip_table: 'Tiap analisis bisa ditambahkan sebagai satu baris. Tabel tersimpan di browser ini. Pilih beberapa file sekaligus untuk menambah banyak service otomatis, nama service dibaca dari nama pod. Salin baris lalu tempel di Excel atau Google Sheets.',
+    t_name: 'Nama service', t_linkl: 'Link (opsional)', t_week: 'Minggu', t_add: 'Tambah ke tabel',
+    t_service: 'Service', t_link: 'Link', t_pods: 'Pod (rata2 / maks)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
+    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_cpu_act: 'Aksi CPU', t_mem_act: 'Aksi memory',
+    t_new_cpu_req: 'CPU request baru', t_new_cpu_lim: 'CPU limit baru', t_new_mem_req: 'Memory request baru', t_new_mem_lim: 'Memory limit baru', t_saving: 'Hemat ($)',
+    act_down: 'Turunkan {pct}%', act_up: 'Naikkan {pct}%', act_same: 'Tetap',
+    t_total: 'Total hemat {v} dari {n} service', t_copy: 'Salin baris', t_csv: 'Unduh CSV', t_clear: 'Kosongkan', t_sure: 'Klik lagi untuk hapus semua',
+    t_empty: 'Belum ada baris. Muat data lalu klik Tambah ke tabel, atau pilih beberapa file sekaligus.', t_del: 'Hapus baris',
+    t_cost_ph: 'estimasi {v}', t_cost_tip: 'Isi biaya asli service ini. Kosong = estimasi harga standar.',
+    t_sample_off: 'Data contoh tidak bisa ditambahkan ke tabel.', t_nodata: 'Muat data dulu.', batch_added: '{n} service ditambahkan ke tabel.',
+    t_copied: 'Baris tersalin, tempel di sheet.', t_dl: 'CSV diunduh.',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -385,6 +420,18 @@ const I18N = {
     lg_avg: 'cross-pod average', lg_max: 'highest pod', lg_thr: 'HPA threshold ({t}% × request)', lg_req: 'request',
     tt_avg: 'average', tt_max: 'highest', tt_pods: '{n} pods',
     foot: 'Estimates, not official numbers.',
+    h_table: 'Service table',
+    tip_table: 'Each analysis can be added as one row. The table is saved in this browser. Choose several files at once to add many services automatically, service names are read from pod names. Copy the rows and paste them into Excel or Google Sheets.',
+    t_name: 'Service name', t_linkl: 'Link (optional)', t_week: 'Week', t_add: 'Add to table',
+    t_service: 'Service', t_link: 'Link', t_pods: 'Pods (avg / max)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
+    t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_cpu_act: 'CPU action', t_mem_act: 'Memory action',
+    t_new_cpu_req: 'New CPU request', t_new_cpu_lim: 'New CPU limit', t_new_mem_req: 'New memory request', t_new_mem_lim: 'New memory limit', t_saving: 'Saving ($)',
+    act_down: 'Lower {pct}%', act_up: 'Raise {pct}%', act_same: 'Keep',
+    t_total: 'Total saving {v} across {n} services', t_copy: 'Copy rows', t_csv: 'Download CSV', t_clear: 'Clear', t_sure: 'Click again to delete all',
+    t_empty: 'No rows yet. Load data then click Add to table, or choose several files at once.', t_del: 'Delete row',
+    t_cost_ph: 'estimate {v}', t_cost_tip: 'Enter this service\'s real cost. Empty = standard price estimate.',
+    t_sample_off: 'Sample data cannot be added to the table.', t_nodata: 'Load data first.', batch_added: '{n} services added to the table.',
+    t_copied: 'Rows copied, paste into the sheet.', t_dl: 'CSV downloaded.',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -396,7 +443,7 @@ const $ = id => document.getElementById(id);
 const KINDS = ['cpu', 'memory'];
 const NAME = { cpu: 'CPU', memory: 'Memory' };
 const HOURS = 730;
-const S = { data: { cpu: null, memory: null }, reps: [], costFile: '', podsTouched: false, plot: {}, podPlot: null, podList: [], prices: { core: 0.035, gib: 0.005, mode: 'estimate' }, errors: [] };
+const S = { data: { cpu: null, memory: null }, reps: [], costFile: '', podsTouched: false, plot: {}, podPlot: null, podList: [], prices: { core: 0.035, gib: 0.005, mode: 'estimate' }, errors: [], rows: [], lastPlans: [], nameTouched: false, notice: '' };
 
 let nf, nf1;
 const setLocale = () => { const loc = LANG === 'id' ? 'id-ID' : 'en-US'; nf = new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }); nf1 = new Intl.NumberFormat(loc, { maximumFractionDigits: 1, minimumFractionDigits: 1 }); };
@@ -495,6 +542,24 @@ function recompute(k, fresh) {
 }
 function loadTexts(items, isSample) {
   const errors = [];
+  S.notice = '';
+  // Banyak service sekaligus: satu baris tabel per service, tampilan detail memakai service pertama.
+  if (!isSample) {
+    const podItems = [];
+    for (const it of items) {
+      if (/monthly[ _-]*cost/i.test(it.name)) continue;
+      const rows = Core.parseCSV(it.text);
+      if (Core.isReplicas(rows, it.name)) continue;
+      const probe = Core.analyze(rows, { filename: it.name });
+      if (probe.error) continue;
+      podItems.push({ it, rows, kind: probe.kind, service: Core.serviceName(rows) || 'service' });
+    }
+    if (new Set(podItems.map(x => x.service)).size > 1) {
+      S.notice = t('batch_added', { n: batchAdd(podItems) });
+      const first = podItems[0].service, drop = new Set(podItems.filter(x => x.service !== first).map(x => x.it));
+      items = items.filter(it => !drop.has(it));
+    }
+  }
   // Unggahan asli menghapus semua data contoh supaya tidak tercampur.
   if (!isSample) {
     for (const k of KINDS) if (S.data[k] && S.data[k].sample) S.data[k] = null;
@@ -572,6 +637,7 @@ function renderStatus() {
   }
   if (S.costFile) ul.appendChild(el('li', '', t('st_cost', { name: S.costFile, v: usd(num('costNow')) })));
   for (const r of S.reps) { const li = el('li', '', t('st_pods', { label: r.label, n: r.pts.length })); if (r.sample) badge(li); ul.appendChild(li); }
+  if (S.notice) ul.appendChild(el('li', 'pos', S.notice));
   for (const e of S.errors || []) ul.appendChild(el('li', 'err', e.name + ': ' + t(e.code)));
 }
 function renderAll() {
@@ -583,7 +649,11 @@ function renderAll() {
     $('sec-' + k).hidden = !ok;
     if (ok) { const p = renderKind(k); if (p) plans.push({ k, p }); }
   }
+  S.lastPlans = plans;
+  if (!S.nameTouched) { for (const k of ['memory', 'cpu']) { const d = S.data[k]; if (d && d.res) { const g = Core.serviceName(d.rows); if (g) { $('svcName').value = g; break; } } } }
+  if (!$('svcWeek').value) $('svcWeek').value = isoWeek(new Date());
   renderSummary(plans);
+  renderTable();
   renderPods();
 }
 function renderSummary(plans) {
@@ -714,6 +784,129 @@ function renderChips(k) {
     });
     box.appendChild(b);
   }
+}
+
+/* ---------- tabel service ---------- */
+function saveRows() { try { localStorage.setItem('pr_rows', JSON.stringify(S.rows)); } catch (e) { /* ignore */ } }
+function restoreRows() { try { const v = JSON.parse(localStorage.getItem('pr_rows') || '[]'); S.rows = Array.isArray(v) ? v : []; } catch (e) { S.rows = []; } }
+function isoWeek(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), day = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  return x.getUTCFullYear() + '-W' + String(Math.ceil(((x - y0) / 86400000 + 1) / 7)).padStart(2, '0');
+}
+const r0 = v => Math.round(v);
+function partFromPlan(c, p) { return { req: c.req, lim: c.lim, p99: p.sm.pooled.p99, recReq: p.recReq, recLim: p.recLim, dir: p.dir, change: p.change }; }
+function podsOf(res) { const n = res.series.map(x => x.n); return { avg: n.reduce((a, b) => a + b, 0) / n.length, max: Math.max(...n) }; }
+function upsertRow(row) {
+  S.rows = S.rows.filter(r => !(r.service === row.service && r.week === row.week));
+  S.rows.push(row);
+}
+function rowCosts(row) {
+  const C = row.cpu, M = row.mem, pods = row.pods.avg;
+  const std = (k, r, pr) => Core.costFor(k, r, pods, HOURS, pr.core, pr.gib);
+  let pr = row.prices, est = true;
+  if (row.cost > 0 && C && M && C.req > 0 && M.req > 0) {
+    const d = Core.detectPrices({ cost: row.cost, pods, hours: HOURS, reqCpu: C.req, reqMem: M.req, ratio: num('ratio') });
+    if (!d.error) { pr = { core: d.priceCore, gib: d.priceGiB }; est = false; }
+  }
+  let now = (C ? std('cpu', C.req, pr) : 0) + (M ? std('memory', M.req, pr) : 0);
+  let nw = (C ? std('cpu', C.recReq, pr) : 0) + (M ? std('memory', M.recReq, pr) : 0);
+  if (row.cost > 0 && est && now > 0) { nw = nw * row.cost / now; now = row.cost; est = false; }
+  return { now, nw, saving: now - nw, est };
+}
+function actText(part) {
+  if (!part) return '-';
+  return part.dir === 'turun' ? t('act_down', { pct: fmt(Math.abs(part.change)) }) : part.dir === 'naik' ? t('act_up', { pct: fmt(Math.abs(part.change)) }) : t('act_same');
+}
+const TCOLS = ['t_service', 't_link', 't_week', 't_pods', 't_cpu_req', 't_cpu_lim', 't_mem_req', 't_mem_lim', 't_peak_cpu', 't_peak_mem', 't_cost', 't_cpu_act', 't_mem_act', 't_new_cpu_req', 't_new_cpu_lim', 't_new_mem_req', 't_new_mem_lim', 't_saving'];
+function rowValues(row) {
+  const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '';
+  return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), v(C, 'lim'), v(M, 'req'), v(M, 'lim'), v(C, 'p99'), v(M, 'p99'), cs.now.toFixed(2),
+    actText(C), actText(M), v(C, 'recReq'), v(C, 'recLim'), v(M, 'recReq'), v(M, 'recLim'), cs.saving.toFixed(2)];
+}
+function renderTable() {
+  const hasPlan = S.lastPlans.length > 0, sample = ['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample);
+  $('tablesec').hidden = !(S.rows.length || hasPlan);
+  $('addRow').disabled = !hasPlan || sample;
+  $('addHint').textContent = sample ? t('t_sample_off') : !hasPlan ? t('t_nodata') : '';
+  const tb = $('svctable'); tb.textContent = '';
+  const thead = el('thead'), hr = el('tr');
+  TCOLS.forEach(k => hr.appendChild(el('th', '', t(k)))); hr.appendChild(el('th', '', ''));
+  thead.appendChild(hr); tb.appendChild(thead);
+  const body = el('tbody');
+  if (!S.rows.length) { const tr = el('tr'), td = el('td', 'empty', t('t_empty')); td.colSpan = TCOLS.length + 1; tr.appendChild(td); body.appendChild(tr); }
+  let total = 0;
+  S.rows.forEach(row => {
+    const vals = rowValues(row), cs = rowCosts(row), tr = el('tr'); total += cs.saving;
+    vals.forEach((x, i) => {
+      const td = el('td');
+      if (i === 0 || i === 1) { const inp = el('input'); inp.type = 'text'; inp.value = x; inp.addEventListener('change', () => { row[i === 0 ? 'service' : 'link'] = inp.value.trim(); saveRows(); renderTable(); }); td.appendChild(inp); }
+      else if (i === 10) {
+        const inp = el('input', 'cost'); inp.type = 'number'; inp.min = '0'; inp.step = 'any'; inp.value = row.cost > 0 ? r0(row.cost * 100) / 100 : ''; inp.placeholder = t('t_cost_ph', { v: cs.now.toFixed(2) }); inp.title = t('t_cost_tip');
+        inp.addEventListener('change', () => { row.cost = parseFloat(inp.value) > 0 ? parseFloat(inp.value) : 0; saveRows(); renderTable(); }); td.appendChild(inp);
+      }
+      else { td.textContent = x; if (i === 17) td.className = cs.saving < 0 ? 'neg' : 'pos'; }
+      tr.appendChild(td);
+    });
+    const d = el('td'), b = el('button', 'del', '×'); b.type = 'button'; b.title = t('t_del'); b.setAttribute('aria-label', t('t_del'));
+    b.addEventListener('click', () => { S.rows = S.rows.filter(r => r.id !== row.id); saveRows(); renderTable(); }); d.appendChild(b); tr.appendChild(d);
+    body.appendChild(tr);
+  });
+  tb.appendChild(body);
+  $('tabletotal').textContent = S.rows.length ? t('t_total', { v: usd(total), n: S.rows.length }) : '';
+  ['copyRows', 'dlCsv', 'clearRows'].forEach(id => { $(id).disabled = !S.rows.length; });
+}
+function makeRowFromCurrent() {
+  const parts = {}, first = S.lastPlans[0];
+  for (const { k, p } of S.lastPlans) parts[k] = partFromPlan(cfg(k), p);
+  const pods = first.p.sm.pods;
+  return { id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), service: $('svcName').value.trim() || 'service', link: $('svcLink').value.trim(), week: $('svcWeek').value.trim() || isoWeek(new Date()),
+    pods: { avg: pods.mean, max: pods.max }, cost: num('costNow'), cpu: parts.cpu || null, mem: parts.memory || null, prices: { core: S.prices.core, gib: S.prices.gib } };
+}
+function batchAdd(podItems) {
+  const groups = new Map();
+  for (const x of podItems) { if (!groups.has(x.service)) groups.set(x.service, {}); groups.get(x.service)[x.kind] = x; }
+  const prices = { core: num('priceCore'), gib: num('priceGiB') };
+  let n = 0;
+  for (const [service, g] of groups) {
+    const parts = {}; let pods = null;
+    for (const kind of ['memory', 'cpu']) {
+      const x = g[kind]; if (!x) continue;
+      const res = Core.analyze(x.rows, { filename: x.it.name, kind });
+      if (res.error || !(res.request > 0)) continue;
+      const pd = podsOf(res); pods = pods || pd;
+      const c = { kind, req: res.request, lim: res.limit || 0, target: num('target') || 80, margin: num('margin'), basis: $('basis').value, buffer: num('buffer'), mult: num('mult') || 2,
+        warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: pd.avg, hours: HOURS, priceCore: prices.core, priceGiB: prices.gib };
+      parts[kind] = partFromPlan(c, Core.plan(res, c));
+    }
+    if (!parts.cpu && !parts.memory) continue;
+    upsertRow({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), service, link: '', week: isoWeek(new Date()), pods: { avg: pods.avg, max: pods.max }, cost: 0, cpu: parts.cpu || null, mem: parts.memory || null, prices });
+    n++;
+  }
+  saveRows();
+  return n;
+}
+const csvCell = v => { v = String(v); return /[",\n\t]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+function wireTable() {
+  $('addRow').addEventListener('click', () => { if (!S.lastPlans.length) return; upsertRow(makeRowFromCurrent()); saveRows(); renderTable(); });
+  $('svcName').addEventListener('input', () => { S.nameTouched = true; });
+  $('copyRows').addEventListener('click', async () => {
+    const txt = S.rows.map(r => rowValues(r).map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+    try { await navigator.clipboard.writeText(txt); $('rowsMsg').textContent = t('t_copied'); } catch (e) { $('rowsMsg').textContent = t('copy_manual'); }
+    setTimeout(() => { $('rowsMsg').textContent = ''; }, 3000);
+  });
+  $('dlCsv').addEventListener('click', () => {
+    const head = TCOLS.map(k => csvCell(t(k))).join(','), body = S.rows.map(r => rowValues(r).map(csvCell).join(',')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + head + '\n' + body], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'pod-rightsizer-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    $('rowsMsg').textContent = t('t_dl'); setTimeout(() => { $('rowsMsg').textContent = ''; }, 3000);
+  });
+  let armed = false, timer = null;
+  $('clearRows').addEventListener('click', () => {
+    if (!armed) { armed = true; $('clearRows').textContent = t('t_sure'); timer = setTimeout(() => { armed = false; $('clearRows').textContent = t('t_clear'); }, 3000); return; }
+    clearTimeout(timer); armed = false; $('clearRows').textContent = t('t_clear'); S.rows = []; saveRows(); renderTable();
+  });
 }
 
 /* ---------- jumlah pod ---------- */
@@ -876,6 +1069,8 @@ const redraw = () => { KINDS.forEach(k => drawChart(k, S.plot[k] && S.plot[k].c)
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
 new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+restoreRows();
+wireTable();
 applyStatic();
 loadTexts(sampleItems(), true);
 </script>

@@ -46,4 +46,8 @@ assert.ok(p.alert.warnSamples > 0 && p.alert.warnSamples < 100 && p.alert.critSa
 // CSV Monthly Cost: satu angka, dengan atau tanpa tanda dolar.
 assert.strictEqual(Core.parseCost(Core.parseCSV('Time,Value\n1790000000000,89.4')), 89.4);
 assert.strictEqual(Core.parseCost(Core.parseCSV('Time,Value\n1790000000000,$12.30')), 12.3);
+// Nama service dari nama pod, dan fungsi biaya yang dipakai plan.
+assert.strictEqual(Core.serviceName(Core.parseCSV('Time,evermos-be-687486564-ggkh6,evermos-be-69bb8f8fbd-dpbrr,requests,limits\n1,2,3,4,5')), 'evermos-be');
+assert.strictEqual(Core.serviceName(Core.parseCSV('Time,Value\n1,2')), '');
+assert.ok(Math.abs(Core.costFor('memory', 1024, 2, 730, 0.035, 0.005) - 7.3) < 1e-9);
 console.log('ok');
