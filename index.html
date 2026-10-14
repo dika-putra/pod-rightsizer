@@ -127,6 +127,8 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
 .svctbl input{padding:4px 6px;font-size:.84rem;min-width:110px}
 .svctbl input.cost{min-width:84px;text-align:right}
 .svctbl td.empty{text-align:center;color:var(--muted);font-family:var(--font-body)}
+.svctbl .mv{font:inherit;border:0;background:transparent;color:var(--accent);cursor:pointer;font-weight:700;padding:2px 5px}
+.svctbl .mv:disabled{color:var(--muted);opacity:.4;cursor:default}
 .svctbl .del{font:inherit;border:0;background:transparent;color:var(--bad);cursor:pointer;font-weight:700;padding:2px 6px}
 .foot{font-size:.8rem;color:var(--muted);margin:0}
 @media (prefers-reduced-motion:reduce){.drop{transition:none}}
@@ -359,6 +361,7 @@ const I18N = {
     t_service: 'Service', t_link: 'Link', t_pods: 'Pod (rata2 / maks)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
     t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_new_cpu_req: 'CPU request baru', t_new_mem_req: 'Memory request baru', t_saving: 'Hemat ($)',
     t_total: 'Total hemat {v} dari {n} service', t_copy: 'Salin baris', t_csv: 'Unduh CSV', t_clear: 'Kosongkan', t_sure: 'Klik lagi untuk hapus semua',
+    t_up: 'Geser ke atas', t_down: 'Geser ke bawah',
     t_empty: 'Belum ada baris. Muat data lalu klik Tambah ke tabel, atau pilih beberapa file sekaligus.', t_del: 'Hapus baris',
     t_cost_ph: 'estimasi {v}', t_cost_tip: 'Isi biaya asli service ini. Kosong = estimasi harga standar.',
     t_sample_off: 'Data contoh tidak bisa ditambahkan ke tabel.', t_nodata: 'Muat data dulu.', batch_added: '{n} service ditambahkan ke tabel.',
@@ -457,6 +460,7 @@ const I18N = {
     t_service: 'Service', t_link: 'Link', t_pods: 'Pods (avg / max)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
     t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_new_cpu_req: 'New CPU request', t_new_mem_req: 'New memory request', t_saving: 'Saving ($)',
     t_total: 'Total saving {v} across {n} services', t_copy: 'Copy rows', t_csv: 'Download CSV', t_clear: 'Clear', t_sure: 'Click again to delete all',
+    t_up: 'Move up', t_down: 'Move down',
     t_empty: 'No rows yet. Load data then click Add to table, or choose several files at once.', t_del: 'Delete row',
     t_cost_ph: 'estimate {v}', t_cost_tip: 'Enter this service\'s real cost. Empty = standard price estimate.',
     t_sample_off: 'Sample data cannot be added to the table.', t_nodata: 'Load data first.', batch_added: '{n} services added to the table.',
@@ -902,7 +906,7 @@ function renderTable() {
   const body = el('tbody');
   if (!S.rows.length) { const tr = el('tr'), td = el('td', 'empty', t('t_empty')); td.colSpan = TCOLS.length + 1; tr.appendChild(td); body.appendChild(tr); }
   let total = 0;
-  S.rows.forEach(row => {
+  S.rows.forEach((row, idx) => {
     const vals = rowValues(row), cs = rowCosts(row), tr = el('tr'); total += cs.saving;
     vals.forEach((x, i) => {
       const td = el('td');
@@ -924,12 +928,20 @@ function renderTable() {
       tr.appendChild(td);
     });
     const d = el('td'), b = el('button', 'del', '×'); b.type = 'button'; b.title = t('t_del'); b.setAttribute('aria-label', t('t_del'));
-    b.addEventListener('click', () => { S.rows = S.rows.filter(r => r.id !== row.id); saveRows(); renderTable(); }); d.appendChild(b); tr.appendChild(d);
+    b.addEventListener('click', () => { S.rows = S.rows.filter(r => r.id !== row.id); saveRows(); renderTable(); });
+    const mv = (dir, txt, key) => { const m = el('button', 'mv', txt); m.type = 'button'; m.title = t(key); m.setAttribute('aria-label', t(key)); m.disabled = dir < 0 ? idx === 0 : idx === S.rows.length - 1; m.addEventListener('click', () => moveRow(row.id, dir)); return m; };
+    d.append(mv(-1, '↑', 't_up'), mv(1, '↓', 't_down'), b); tr.appendChild(d);
     body.appendChild(tr);
   });
   tb.appendChild(body);
   $('tabletotal').textContent = S.rows.length ? t('t_total', { v: usd(total), n: S.rows.length }) : '';
   ['copyRows', 'dlCsv', 'clearRows'].forEach(id => { $(id).disabled = !S.rows.length; });
+}
+function moveRow(id, dir) {
+  const i = S.rows.findIndex(r => r.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= S.rows.length) return;
+  [S.rows[i], S.rows[j]] = [S.rows[j], S.rows[i]];
+  saveRows(); renderTable();
 }
 function makeRowFromCurrent() {
   const parts = {}, first = S.lastPlans[0];
