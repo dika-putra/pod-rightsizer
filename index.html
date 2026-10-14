@@ -844,10 +844,11 @@ function actText(part) {
   return part.dir === 'turun' ? t('act_down', { pct: fmt(Math.abs(part.change)) }) : part.dir === 'naik' ? t('act_up', { pct: fmt(Math.abs(part.change)) }) : t('act_same');
 }
 const TCOLS = ['t_service', 't_link', 't_week', 't_pods', 't_cpu_req', 't_cpu_lim', 't_mem_req', 't_mem_lim', 't_peak_cpu', 't_peak_mem', 't_cost', 't_cpu_act', 't_mem_act', 't_new_cpu_req', 't_new_cpu_lim', 't_new_mem_req', 't_new_mem_lim', 't_saving'];
-function rowValues(row) {
-  const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '';
-  return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), v(C, 'lim'), v(M, 'req'), v(M, 'lim'), v(C, 'p99'), v(M, 'p99'), cs.now.toFixed(2),
-    actText(C), actText(M), v(C, 'recReq'), v(C, 'recLim'), v(M, 'recReq'), v(M, 'recLim'), cs.saving.toFixed(2)];
+// plain = true untuk salin dan CSV: angka polos tanpa format, supaya mengikuti format sel tujuan.
+function rowValues(row, plain) {
+  const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '', money = x => plain ? Math.round(x * 100) / 100 : x.toFixed(2);
+  return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), v(C, 'lim'), v(M, 'req'), v(M, 'lim'), v(C, 'p99'), v(M, 'p99'), money(cs.now),
+    actText(C), actText(M), v(C, 'recReq'), v(C, 'recLim'), v(M, 'recReq'), v(M, 'recLim'), money(cs.saving)];
 }
 function renderTable() {
   const hasPlan = S.lastPlans.length > 0, sample = ['cpu', 'memory'].some(k => S.data[k] && S.data[k].sample);
@@ -925,12 +926,12 @@ function wireTable() {
   $('addRow').addEventListener('click', () => { if (!S.lastPlans.length) return; upsertRow(makeRowFromCurrent()); saveRows(); renderTable(); });
   $('svcName').addEventListener('input', () => { S.nameTouched = true; });
   $('copyRows').addEventListener('click', async () => {
-    const txt = S.rows.map(r => rowValues(r).map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+    const txt = S.rows.map(r => rowValues(r, true).map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
     try { await navigator.clipboard.writeText(txt); $('rowsMsg').textContent = t('t_copied'); } catch (e) { $('rowsMsg').textContent = t('copy_manual'); }
     setTimeout(() => { $('rowsMsg').textContent = ''; }, 3000);
   });
   $('dlCsv').addEventListener('click', () => {
-    const head = TCOLS.map(k => csvCell(t(k))).join(','), body = S.rows.map(r => rowValues(r).map(csvCell).join(',')).join('\n');
+    const head = TCOLS.map(k => csvCell(t(k))).join(','), body = S.rows.map(r => rowValues(r, true).map(csvCell).join(',')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + head + '\n' + body], { type: 'text/csv;charset=utf-8' }));
     a.download = 'pod-rightsizer-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     $('rowsMsg').textContent = t('t_dl'); setTimeout(() => { $('rowsMsg').textContent = ''; }, 3000);
