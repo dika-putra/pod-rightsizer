@@ -345,7 +345,7 @@ const I18N = {
     tt_avg: 'rata-rata', tt_max: 'tertinggi', tt_pods: '{n} pod',
     foot: 'Estimasi, bukan angka resmi.',
     h_table: 'Tabel service',
-    tip_table: 'Tiap analisis bisa ditambahkan sebagai satu baris. Tabel tersimpan di browser ini. Pilih beberapa file sekaligus untuk menambah banyak service otomatis, nama service dibaca dari nama pod. Salin baris lalu tempel di Excel atau Google Sheets.',
+    tip_table: 'Tiap analisis bisa ditambahkan sebagai satu baris. Tabel tersimpan di browser ini. Pilih beberapa file sekaligus untuk menambah banyak service otomatis, nama service dibaca dari nama pod. Salin baris (mulai dari kolom Minggu, tanpa nama service dan link, urutannya sama dengan tabel) lalu tempel di Excel atau Google Sheets.',
     t_name: 'Nama service', t_linkl: 'Link (opsional)', t_week: 'Minggu', t_add: 'Tambah ke tabel',
     t_service: 'Service', t_link: 'Link', t_pods: 'Pod (rata2 / maks)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
     t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Biaya sekarang ($)', t_cpu_act: 'Aksi CPU', t_mem_act: 'Aksi memory',
@@ -437,7 +437,7 @@ const I18N = {
     tt_avg: 'average', tt_max: 'highest', tt_pods: '{n} pods',
     foot: 'Estimates, not official numbers.',
     h_table: 'Service table',
-    tip_table: 'Each analysis can be added as one row. The table is saved in this browser. Choose several files at once to add many services automatically, service names are read from pod names. Copy the rows and paste them into Excel or Google Sheets.',
+    tip_table: 'Each analysis can be added as one row. The table is saved in this browser. Choose several files at once to add many services automatically, service names are read from pod names. Copy rows (starting from the Week column, without service name and link, in table order) and paste them into Excel or Google Sheets.',
     t_name: 'Service name', t_linkl: 'Link (optional)', t_week: 'Week', t_add: 'Add to table',
     t_service: 'Service', t_link: 'Link', t_pods: 'Pods (avg / max)', t_cpu_req: 'CPU request (m)', t_cpu_lim: 'CPU limit (m)', t_mem_req: 'Memory request (MiB)', t_mem_lim: 'Memory limit (MiB)',
     t_peak_cpu: 'Peak CPU p99 (m)', t_peak_mem: 'Peak memory p99 (MiB)', t_cost: 'Current cost ($)', t_cpu_act: 'CPU action', t_mem_act: 'Memory action',
@@ -845,6 +845,8 @@ function actText(part) {
 }
 const TCOLS = ['t_service', 't_link', 't_week', 't_pods', 't_cpu_req', 't_cpu_lim', 't_mem_req', 't_mem_lim', 't_peak_cpu', 't_peak_mem', 't_cost', 't_cpu_act', 't_mem_act', 't_new_cpu_req', 't_new_cpu_lim', 't_new_mem_req', 't_new_mem_lim', 't_saving'];
 // plain = true untuk salin dan CSV: angka polos tanpa format, supaya mengikuti format sel tujuan.
+// Salin dan CSV mulai dari kolom Minggu: nama service dan link sudah ada di sheet.
+const EXPORT_FROM = 2;
 function rowValues(row, plain) {
   const C = row.cpu, M = row.mem, cs = rowCosts(row), v = (p, f) => p ? r0(p[f]) : '', money = x => plain ? Math.round(x * 100) / 100 : x.toFixed(2);
   return [row.service, row.link, row.week, `${r0(row.pods.avg)} / ${row.pods.max}`, v(C, 'req'), v(C, 'lim'), v(M, 'req'), v(M, 'lim'), v(C, 'p99'), v(M, 'p99'), money(cs.now),
@@ -926,12 +928,12 @@ function wireTable() {
   $('addRow').addEventListener('click', () => { if (!S.lastPlans.length) return; upsertRow(makeRowFromCurrent()); saveRows(); renderTable(); });
   $('svcName').addEventListener('input', () => { S.nameTouched = true; });
   $('copyRows').addEventListener('click', async () => {
-    const txt = S.rows.map(r => rowValues(r, true).map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+    const txt = S.rows.map(r => rowValues(r, true).slice(EXPORT_FROM).map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
     try { await navigator.clipboard.writeText(txt); $('rowsMsg').textContent = t('t_copied'); } catch (e) { $('rowsMsg').textContent = t('copy_manual'); }
     setTimeout(() => { $('rowsMsg').textContent = ''; }, 3000);
   });
   $('dlCsv').addEventListener('click', () => {
-    const head = TCOLS.map(k => csvCell(t(k))).join(','), body = S.rows.map(r => rowValues(r, true).map(csvCell).join(',')).join('\n');
+    const head = TCOLS.slice(EXPORT_FROM).map(k => csvCell(t(k))).join(','), body = S.rows.map(r => rowValues(r, true).slice(EXPORT_FROM).map(csvCell).join(',')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + head + '\n' + body], { type: 'text/csv;charset=utf-8' }));
     a.download = 'pod-rightsizer-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     $('rowsMsg').textContent = t('t_dl'); setTimeout(() => { $('rowsMsg').textContent = ''; }, 3000);

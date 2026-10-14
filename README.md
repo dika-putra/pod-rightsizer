@@ -50,7 +50,7 @@ The summary also suggests per-pod alert thresholds as a percentage of the recomm
 
 ### Service table
 
-Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Copy rows gives rows without a header, so you can append them under an existing header.
+Each analysis can be added as one row to a table with one column set per service: pods, current and new request and limit for CPU and memory, p99 peaks, current cost, and saving. The table is saved in this browser (localStorage) and can be copied as tab-separated rows to paste into Excel or Google Sheets, or downloaded as CSV. Copy rows gives rows without a header and starting from the Week column (no service name or link), in table order, so you can paste them next to services already listed in your sheet. Download CSV has the same columns with a header.
 
 To add many services at once, choose several CSV files in one go. Pod names in the CSV (`<service>-<hash>-<id>`) identify the service, so CPU and memory files of the same service are paired and one row is added per service. A service's real monthly cost can be typed into the Current cost cell of its row, which recalculates its saving. Without it the row uses the standard price estimate. A row with the same service and week is replaced.
 
