@@ -173,6 +173,16 @@
     });
   }
 
+  // Ambang alert per pod sebagai persen dari request, plus perkiraan seberapa sering data
+  // yang ada akan melewatinya (per sampel pod, dan per titik waktu kalau ada pod yang melewati).
+  function alertPlan(res, req, warnPct, critPct) {
+    const warn = req * warnPct / 100, crit = req * critPct / 100;
+    const n = res.pooled.length, m = res.series.length;
+    const above = t => res.pooled.filter(v => v > t).length / n * 100;
+    const times = t => res.series.filter(x => x.max > t).length / m * 100;
+    return { warn, crit, warnPct, critPct, warnSamples: above(warn), critSamples: above(crit), warnTimes: times(warn), critTimes: times(crit) };
+  }
+
   // Rekomendasi request, limit, dan biaya.
   // Request = yang terbesar dari: (1) rata-rata antar pod pada persentil pilihan dibagi (target - ruang aman),
   // agar HPA tidak scale-up; (2) p99 pod tunggal + buffer; (3) minimum.
@@ -192,7 +202,8 @@
     const unitCost = r => c.pods * c.hours * (c.kind === 'cpu' ? r / 1000 * c.priceCore : r / 1024 * c.priceGiB);
     const costNow = unitCost(c.req), costNew = unitCost(recReq);
     const after = simulate(res, c.target, c.margin, [recReq])[0];
-    return { sm, avgBasis, reqHpa, reqPod, raw, binds, change, dir, recReq, recLim, limitRisk, costNow, costNew, saving: costNow - costNew, after };
+    const alert = alertPlan(res, recReq, c.warnPct || 80, c.critPct || 90);
+    return { sm, avgBasis, reqHpa, reqPod, raw, binds, change, dir, recReq, recLim, limitRisk, costNow, costNew, saving: costNow - costNew, after, alert };
   }
 
   // CSV jumlah pod dari panel Grafana (Pod Available, Pod Desired, Min Pods, Max Pods, dst.).
@@ -248,7 +259,7 @@
     return { priceCore, priceGiB: priceCore * o.ratio };
   }
 
-  const Core = { parseCSV, analyze, summarize, simulate, plan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices };
+  const Core = { parseCSV, analyze, summarize, simulate, plan, alertPlan, pct, asc, isReplicas, analyzeSeries, podCounts, seriesStats, detectPrices };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(typeof self !== 'undefined' ? self : globalThis);

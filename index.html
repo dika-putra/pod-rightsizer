@@ -58,7 +58,7 @@ input[type=number],input[type=text],select{font:inherit;font-family:var(--font-m
 .hero.warn{border-color:var(--warn);background:var(--warnbg)}
 .hero .tag{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ok)}
 .hero.warn .tag{color:var(--warn)}
-.hero .big{font-size:2.2rem;font-weight:700;font-family:var(--font-mono);line-height:1.1}
+.hero .big{font-size:2.8rem;font-weight:700;font-family:var(--font-mono);line-height:1.1}
 .hero .sub{color:var(--muted);font-size:.9rem}
 .tablewrap{overflow-x:auto;margin-top:12px}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -97,6 +97,25 @@ canvas{display:block;width:100%;height:280px}
 .card{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
 dl.s{margin:0;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
 dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.sumpanel{border:2px solid var(--accent);padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 4px 18px rgba(10,106,112,.12)}
+.sumpanel h2{color:var(--accent);margin:0;font-size:.85rem}
+.recgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.rcard{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rname{font-size:1.1rem;font-weight:700}
+.rrow{display:grid;grid-template-columns:64px 1fr;align-items:baseline;gap:2px 10px}
+.rrow .lab{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;grid-row:span 2}
+.rrow .new{font-family:var(--font-mono);font-size:1.9rem;font-weight:700;line-height:1.15;color:var(--accent)}
+.rrow .was{font-size:.82rem;color:var(--muted);font-family:var(--font-mono)}
+.rline{font-size:.9rem;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono)}
+.rwarn{font-size:.82rem;color:var(--warn);font-weight:600}
+.ralert{border-top:1px solid var(--line);padding-top:10px;font-size:.88rem;display:flex;flex-direction:column;gap:3px}
+.ralert .lab{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.ralert b{font-family:var(--font-mono)}
+.ralert .est{color:var(--muted);font-size:.8rem}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.dot.w{background:var(--warn)} .dot.c{background:var(--bad)}
+.sumpanel pre{margin:10px 0 0}
 .sub2{margin:0 0 10px;color:var(--muted);font-size:.9rem;max-width:75ch}
 .pricebox{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .pricebox h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;font-weight:600}
@@ -140,6 +159,8 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
         <label class="f">Buffer pod tunggal (%)<input type="number" id="buffer" value="15" min="0" max="100" step="1"></label>
         <label class="f">Limit = request x<input type="number" id="mult" value="2" min="1" max="5" step="0.1"></label>
         <label class="f">Minimum request<input type="number" id="minReq" value="25" min="0" step="1"></label>
+        <label class="f">Alert warning (% request)<input type="number" id="warnPct" value="80" min="1" max="200" step="1"></label>
+        <label class="f">Alert critical (% request)<input type="number" id="critPct" value="90" min="1" max="200" step="1"></label>
         <label class="f">Jumlah pod rata-rata<input type="number" id="pods" value="2" min="0.1" step="0.1"></label>
       </div>
       <div class="pricebox">
@@ -163,10 +184,15 @@ dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--
     </details>
   </section>
 
-  <section class="panel" id="summary" hidden aria-labelledby="h-sum">
-    <h2 id="h-sum">Ringkasan</h2>
+  <section class="panel sumpanel" id="summary" hidden aria-labelledby="h-sum">
+    <h2 id="h-sum">Ringkasan dan rekomendasi</h2>
     <div class="hero" id="hero"></div>
-    <div class="tablewrap"><table id="sumtable"></table></div>
+    <div class="recgrid" id="recgrid"></div>
+    <details style="margin:0"><summary>Contoh konfigurasi alert</summary>
+      <p class="hint" style="margin:8px 0 0">Format blok <code>alerts</code> pada Helm values. Satu blok hanya punya satu <code>target</code>, jadi contoh ini memakai level critical. Untuk level warning, buat alert kedua. Sesuaikan dengan chart kamu.</p>
+      <pre id="alertyaml"></pre>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn ghost" type="button" id="copyAlert">Salin</button><span class="hint" id="copiedAlert"></span></div>
+    </details>
   </section>
 
   <section class="panel" id="podsec" hidden aria-labelledby="h-pods">
@@ -209,7 +235,6 @@ function skeleton(k) {
       <label class="f">Request sekarang (${u})<input type="number" id="req-${k}" min="0" step="any"></label>
       <label class="f">Limit sekarang (${u})<input type="number" id="lim-${k}" min="0" step="any"></label>
     </div>
-    <div class="reco" id="reco-${k}"></div>
     <ol class="why" id="why-${k}"></ol>
     <p class="check" id="check-${k}"></p>
     <div class="chips" id="chips-${k}" hidden></div>
@@ -311,12 +336,15 @@ async function loadFiles(files) {
   const items = [];
   for (const f of files) { try { items.push({ name: f.name, text: await f.text() }); } catch (e) { S.errors = [f.name + ': gagal dibaca']; } }
   loadTexts(items, false);
+  focusSummary();
 }
+
+function focusSummary() { if (!$('summary').hidden) $('summary').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }
 
 /* ---------- render ---------- */
 function cfg(k) {
   return { kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
-    buffer: num('buffer'), mult: num('mult') || 2, min: num('minReq'), pods: num('pods'), hours: HOURS, priceCore: S.prices.core, priceGiB: S.prices.gib };
+    buffer: num('buffer'), mult: num('mult') || 2, warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: num('pods'), hours: HOURS, priceCore: S.prices.core, priceGiB: S.prices.gib };
 }
 function renderStatus() {
   const ul = $('status'); ul.textContent = '';
@@ -372,43 +400,44 @@ function renderSummary(plans) {
   const hero = $('hero'); hero.className = 'hero' + (sv < 0 ? ' warn' : ''); hero.textContent = '';
   hero.append(el('span', 'tag', sv < 0 ? 'Estimasi biaya naik per bulan' : 'Estimasi hemat per bulan'), el('div', 'big', usd(Math.abs(sv))),
     el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '') + (plans.length < 2 ? '. Hanya resource yang dimuat yang dihitung.' : '')));
-  const t = $('sumtable');
-  t.innerHTML = '<thead><tr><th>Resource</th><th>Request</th><th>Limit</th><th>Biaya per bulan</th><th>Hemat</th></tr></thead>';
-  const tb = el('tbody');
+  const grid = $('recgrid'); grid.textContent = '';
   for (const { k, p } of plans) {
-    const c = cfg(k), u = k === 'cpu' ? 'm' : 'MiB', tr = el('tr');
-    const cells = [NAME[k], `${fmt(c.req)} → ${fmt(p.recReq)} ${u}`, `${fmt(c.lim)} → ${fmt(p.recLim)} ${u}`, `${usd(p.costNow)} → ${usd(p.costNew)}`, usd(p.saving)];
-    cells.forEach((x, i) => { const td = el('td', i === 4 ? (p.saving < 0 ? 'neg' : 'pos') : '', x); tr.appendChild(td); });
-    tb.appendChild(tr);
+    const c = cfg(k), u = k === 'cpu' ? 'm' : 'MiB', a = p.alert, card = el('div', 'rcard');
+    const head = el('div', 'rhead'); head.appendChild(el('span', 'rname', NAME[k]));
+    const dirTxt = { turun: 'Turunkan request', naik: 'Naikkan request', tetap: 'Request tetap' }[p.dir];
+    head.appendChild(el('span', 'pill ' + (p.dir === 'turun' ? 'ok' : p.dir === 'naik' ? 'warn' : ''), dirTxt + (p.dir === 'tetap' ? '' : ' ' + fmt(Math.abs(p.change)) + '%')));
+    card.appendChild(head);
+    const row = (lab, nw2, was) => { const r = el('div', 'rrow'); r.append(el('span', 'lab', lab), el('span', 'new', nw2), el('span', 'was', was)); return r; };
+    card.append(row('Request', `${fmt(p.recReq)} ${u}`, `sekarang ${fmt(c.req)} ${u}`), row('Limit', `${fmt(p.recLim)} ${u}`, `sekarang ${fmt(c.lim)} ${u} · request x ${c.mult}`));
+    if (p.limitRisk) card.appendChild(el('div', 'rwarn', `Pod tertinggi di data ${fmt(p.sm.maxPod)} ${u}, lebih tinggi dari limit ini. ${k === 'cpu' ? 'Risiko throttle (request melambat).' : 'Risiko OOM (pod mati).'} Naikkan pengali limit.`));
+    const cost = el('div', 'rline'); cost.append(el('span', '', `Biaya ${usd(p.costNow)} → ${usd(p.costNew)}`), el('b', p.saving < 0 ? 'neg' : 'pos', (p.saving < 0 ? 'naik ' : 'hemat ') + usd(Math.abs(p.saving))));
+    card.appendChild(cost);
+    const al = el('div', 'ralert'); al.appendChild(el('span', 'lab', 'Alert per pod'));
+    const wl = el('div'); wl.append(el('span', 'dot w'), document.createTextNode(`Warning di atas `), el('b', '', `${fmt(a.warn)} ${u}`), document.createTextNode(` (${a.warnPct}% request)`));
+    const cl = el('div'); cl.append(el('span', 'dot c'), document.createTextNode(`Critical di atas `), el('b', '', `${fmt(a.crit)} ${u}`), document.createTextNode(` (${a.critPct}% request)`));
+    al.append(wl, cl, el('span', 'est', `Dari data: pod tunggal melewati warning di ${fmt(a.warnSamples)}% sampel dan critical di ${fmt(a.critSamples)}%.` + (a.critSamples > 1 ? ' Cukup sering, pakai durasi minimal (for) agar tidak berisik.' : '')));
+    card.appendChild(al);
+    grid.appendChild(card);
   }
-  t.appendChild(tb);
+  const y = ['alerts:'];
+  for (const { k, p } of plans) {
+    const crit = Math.round(p.alert.crit);
+    if (k === 'cpu') y.push('  cpu:', `    message: High CPU on pod detected. More than ${crit}m`, `    target: ${crit}`, '    type: max');
+    else y.push('  memory:', '    frequency: 5m', `    message: High memory on pod detected. More than ${crit}MiB`, '    queryRange: 5m', `    target: ${crit}`, '    type: max');
+  }
+  $('alertyaml').textContent = y.join('\n');
 }
 function renderKind(k) {
   const d = S.data[k], res = d.res, u = res.unit, c = cfg(k);
   $('src-' + k).textContent = d.name + (d.sample ? ' (contoh)' : '');
   renderChips(k);
-  const reco = $('reco-' + k), why = $('why-' + k), check = $('check-' + k);
-  reco.textContent = ''; why.textContent = ''; check.textContent = '';
+  const why = $('why-' + k), check = $('check-' + k);
+  why.textContent = ''; check.textContent = '';
   if (!(c.req > 0)) {
-    reco.appendChild(el('p', 'hint', 'Isi request sekarang untuk melihat rekomendasi.'));
+    check.textContent = 'Isi request sekarang untuk melihat rekomendasi.';
     S.plot[k] = null; drawChart(k, c); return null;
   }
   const p = Core.plan(res, c), sm = p.sm;
-
-  const rc = (lab, now, nw, note, warn) => {
-    const b = el('div', 'rc'); b.append(el('span', 'lab', lab), el('span', 'now', 'sekarang ' + now), el('span', 'new', nw));
-    const n = el('span', 'note'); if (note instanceof Node) n.appendChild(note); else n.textContent = note; b.appendChild(n);
-    if (warn) b.appendChild(el('span', 'warnline', warn)); return b;
-  };
-  const dirTxt = { turun: 'Turunkan', naik: 'Naikkan', tetap: 'Tetap' }[p.dir];
-  const reqNote = el('span'); reqNote.append(el('b', p.dir === 'turun' ? 'pos' : p.dir === 'naik' ? 'neg' : '', dirTxt),
-    document.createTextNode(p.dir === 'tetap' ? ` (selisih ${fmt(Math.abs(p.change))}%, di bawah 5%)` : ` ${fmt(Math.abs(p.change))}%`));
-  const limWarn = p.limitRisk ? `Pod tertinggi di data ${fmt(sm.maxPod)} ${u}, lebih tinggi dari limit ini. ${k === 'cpu' ? 'Risiko throttle (request melambat).' : 'Risiko OOM (pod mati).'} Naikkan pengali limit.` : '';
-  const costNote = el('span'); costNote.append(el('b', p.saving < 0 ? 'neg' : 'pos', (p.saving < 0 ? 'Naik ' : 'Hemat ') + usd(Math.abs(p.saving))), document.createTextNode(' per bulan'));
-  reco.append(
-    rc('Request', fmt(c.req) + ' ' + u, fmt(p.recReq) + ' ' + u, reqNote),
-    rc('Limit', fmt(c.lim) + ' ' + u, fmt(p.recLim) + ' ' + u, `Request x ${c.mult}`, limWarn),
-    rc('Biaya per bulan', usd(p.costNow), usd(p.costNew), costNote));
 
   const basisLbl = { p95: 'p95', p99: 'p99', max: 'maks' }[c.basis];
   const li = (txt, on) => { const e = el('li', on ? 'bind' : '', txt + (on ? ' (dipakai)' : '')); why.appendChild(e); };
@@ -582,9 +611,9 @@ const drop = $('drop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
-$('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps()), true); });
+$('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps()), true); focusSummary(); });
 $('pods').addEventListener('input', () => { S.podsTouched = true; });
-for (const id of ['target', 'margin', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceMode', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
+for (const id of ['target', 'margin', 'warnPct', 'critPct', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceMode', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
 for (const k of KINDS) {
   for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
   $('cv-' + k).addEventListener('mousemove', e => hover(k, e));
@@ -592,6 +621,12 @@ for (const k of KINDS) {
   document.querySelector(`[data-chart="${k}"]`).addEventListener('toggle', () => drawChart(k, S.plot[k] && S.plot[k].c));
   new ResizeObserver(() => drawChart(k, S.plot[k] && S.plot[k].c)).observe($('cv-' + k).parentElement);
 }
+$('copyAlert').addEventListener('click', async () => {
+  const txt = $('alertyaml').textContent;
+  try { await navigator.clipboard.writeText(txt); $('copiedAlert').textContent = 'Tersalin.'; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('alertyaml')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $('copiedAlert').textContent = 'Teks sudah dipilih, tekan Ctrl+C atau Cmd+C.'; }
+  setTimeout(() => { $('copiedAlert').textContent = ''; }, 3000);
+});
 const redraw = () => { KINDS.forEach(k => drawChart(k, S.plot[k] && S.plot[k].c)); drawPods(); };
 $('cv-pods').addEventListener('mousemove', hoverPods);
 $('cv-pods').addEventListener('mouseleave', leavePods);

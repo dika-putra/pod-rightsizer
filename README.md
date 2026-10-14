@@ -42,6 +42,10 @@ The recommended limit is `request x multiplier`. The page warns when that limit 
 
 Cost follows the request: `pods x 730 hours x request x unit price`, with CPU priced per core-hour and memory per GiB-hour. The summary adds up the resources you loaded.
 
+### Alerts
+
+The summary also suggests per-pod alert thresholds as a percentage of the recommended request: warning at 80% and critical at 90% by default. For each threshold it shows how often the loaded data would have crossed it, so you can see whether an alert would be noisy before you create it. The example `alerts` block (message, target, type) is a starting point for Helm values and needs to be adapted to your chart.
+
 ### Prices
 
 Enter the two unit prices yourself, or choose **Hitung dari biaya sekarang** and enter the service's current monthly cost. A single cost cannot give two prices, so the memory price per GiB-hour is derived from a ratio to the CPU price per core-hour (default 0.14, an example value). The detected prices reproduce the cost you entered. This needs the current CPU and memory requests, taken from the loaded CSVs or typed in.
@@ -59,6 +63,7 @@ The Jumlah pod section shows min, median, max and last value of each series, plu
 | Average percentile | p99 |
 | Single pod buffer | 15% |
 | Limit multiplier | 2 |
+| Alert warning / critical | 80% / 90% of request |
 | Minimum request | 25 |
 | Average pod count | taken from the data |
 | CPU price | $0.035 per core-hour (example value) |
