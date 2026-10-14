@@ -2,7 +2,7 @@
 
 Upload CPU and memory CSV exports from Grafana and get a recommended request and limit for each pod, the current monthly cost, and the estimated saving.
 
-Everything runs in the browser. Files are read locally and never uploaded. There are no dependencies and no build step. The page UI is in Indonesian.
+Everything runs in the browser. Files are read locally and never uploaded. There are no dependencies and no build step. The UI is available in Indonesian and English (ID/EN toggle, top right), and longer explanations are in info tooltips.
 
 ## Run
 

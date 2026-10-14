@@ -1,4 +1,4 @@
-// Hitungan murni tanpa DOM, dipakai oleh index.html dan test.js.
+// Pure calculations without DOM, used by index.html and test.js. Errors are codes translated by the UI.
 (function (root) {
   const NUM = /^\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*([A-Za-z%]*)\s*$/i;
   const MEMU = { b: 1 / 1048576, kb: 1 / 1024, kib: 1 / 1024, mb: 1, mib: 1, gb: 1024, gib: 1024 };
@@ -77,7 +77,7 @@
   // Satu CSV berisi satu resource (CPU atau Memory), satu kolom per pod.
   function analyze(rows, opt) {
     opt = opt || {};
-    if (!rows || rows.length < 2) return { error: 'File kosong atau hanya berisi header.' };
+    if (!rows || rows.length < 2) return { error: 'err_empty' };
     const h = rows[0].map(x => String(x).trim());
     let ti = h.findIndex(x => /^time$/i.test(x));
     if (ti < 0) ti = 0;
@@ -106,7 +106,7 @@
       }
       if (n > 0) cols.push({ name: h[j], rev: revOf(h[j]), vals, n });
     }
-    if (!cols.length) return { error: 'Tidak ada kolom pod yang berisi angka. Pastikan CSV memakai Series joined by time.' };
+    if (!cols.length) return { error: 'err_nopods' };
 
     const times = [];
     for (let r = 1; r < rows.length; r++) times.push(parseTime(rows[r][ti]));
@@ -221,7 +221,7 @@
     return String(filename || 'pod').replace(/^.*[\\/]/, '').replace(/\.csv$/i, '').replace(/-data-as-.*$/i, '').replace(/[-_]data$/i, '').trim() || 'pod';
   }
   function analyzeSeries(rows, filename) {
-    if (!rows || rows.length < 2) return { error: 'File kosong atau hanya berisi header.' };
+    if (!rows || rows.length < 2) return { error: 'err_empty' };
     const h = rows[0].map(x => String(x).trim());
     let ti = h.findIndex(x => /^time$/i.test(x));
     if (ti < 0) ti = 0;
@@ -235,7 +235,7 @@
       }
       if (pts.length) out.push({ label: idx.length === 1 ? labelFromFile(filename) : h[j], pts });
     }
-    return out.length ? { series: out } : { error: 'Tidak ada kolom berisi angka.' };
+    return out.length ? { series: out } : { error: 'err_nonum' };
   }
   // Jumlah pod yang punya data di tiap waktu, dari CSV CPU atau Memory.
   function podCounts(res) {
@@ -266,10 +266,10 @@
   // Satu biaya tidak cukup untuk dua harga, jadi rasio harga memory terhadap CPU dipakai sebagai asumsi.
   // biaya = pod x jam x (core x hargaCore + GiB x hargaCore x rasio)
   function detectPrices(o) {
-    if (!(o.cost > 0)) return { error: 'Isi biaya sekarang per bulan.' };
-    if (!(o.pods > 0)) return { error: 'Isi jumlah pod.' };
-    if (!(o.reqCpu > 0) || !(o.reqMem > 0)) return { error: 'Butuh request CPU dan Memory.' };
-    if (!(o.ratio > 0)) return { error: 'Isi rasio harga.' };
+    if (!(o.cost > 0)) return { error: 'err_cost' };
+    if (!(o.pods > 0)) return { error: 'err_pods' };
+    if (!(o.reqCpu > 0) || !(o.reqMem > 0)) return { error: 'err_req' };
+    if (!(o.ratio > 0)) return { error: 'err_ratio' };
     const base = o.pods * o.hours * (o.reqCpu / 1000 + o.reqMem / 1024 * o.ratio);
     const priceCore = o.cost / base;
     return { priceCore, priceGiB: priceCore * o.ratio };

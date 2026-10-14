@@ -33,220 +33,389 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
 .wrap{max-width:1040px;margin-inline:auto;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 h1{font-size:1.75rem;line-height:1.15;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
 h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:600}
-.lede{margin:0;color:var(--muted);max-width:68ch}
+h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px;font-weight:600}
+.lede{margin:0;color:var(--muted);max-width:62ch}
+.lang{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.lang button{font:inherit;font-size:.8rem;font-weight:600;padding:5px 11px;border:0;background:var(--surface);color:var(--muted);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
 .hint{color:var(--muted);font-size:.86rem}
 code{font-family:var(--font-mono);font-size:.85em;background:var(--soft);padding:1px 5px;border-radius:4px}
-ol.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;max-width:75ch}
+.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:6px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:.68rem;font-weight:700;cursor:help;vertical-align:middle;line-height:1;text-transform:none;letter-spacing:0;font-family:var(--font-body)}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:-8px;bottom:calc(100% + 8px);width:max-content;max-width:min(280px,calc(100vw - 40px));background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:7px;font-size:.8rem;font-weight:400;line-height:1.4;text-align:left;white-space:normal;z-index:20}
+.tip.r:hover::after,.tip.r:focus::after{left:auto;right:-8px}
+.tip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+ol.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px}
 .drop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1.5px dashed var(--line);border-radius:8px;padding:14px;transition:border-color .15s,background .15s}
 .drop.over{border-color:var(--accent);background:var(--soft)}
 .btn{font:inherit;font-weight:600;border-radius:7px;padding:8px 14px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
 .btn.ghost{background:transparent;color:var(--accent)}
-.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.chip:focus-visible,.lang button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #status{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:.88rem}
 #status .err{color:var(--bad);font-weight:600}
 .badge{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--warnbg);color:var(--warn);margin-left:6px}
 details{margin-top:14px}
 summary{cursor:pointer;font-weight:600;color:var(--accent);width:fit-content}
-.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:12px}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:12px}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:500;min-width:0}
+.chk{display:flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
 input[type=number],input[type=text],select{font:inherit;font-family:var(--font-mono);font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%;min-width:0}
+.pricebox{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.sumpanel{border:2px solid var(--accent);padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 4px 18px rgba(10,106,112,.12)}
+.sumpanel h2{color:var(--accent);margin:0;font-size:.85rem}
+.sumpanel h3{margin:0 0 8px}
 .hero{border-radius:10px;padding:16px;border:1px solid var(--ok);background:var(--okbg);display:flex;flex-direction:column;gap:4px}
 .hero.warn{border-color:var(--warn);background:var(--warnbg)}
 .hero .tag{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ok)}
 .hero.warn .tag{color:var(--warn)}
 .hero .big{font-size:2.8rem;font-weight:700;font-family:var(--font-mono);line-height:1.1}
 .hero .sub{color:var(--muted);font-size:.9rem}
-.tablewrap{overflow-x:auto;margin-top:12px}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-th:first-child,td:first-child{text-align:left}
-th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
-td{font-family:var(--font-mono);font-size:.92rem}
-td.st{font-family:var(--font-body);font-weight:600}
-td.st.ok,.pos{color:var(--ok)} td.st.warn,.neg{color:var(--warn)} td.st.bad{color:var(--bad)}
-tr.cur td:first-child::after{content:" sekarang";font-family:var(--font-body);font-size:.72rem;color:var(--muted)}
-.reshead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px}
-.reshead h2{margin:0;font-size:1rem;color:var(--ink);letter-spacing:.02em}
-.inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,220px));gap:12px;margin-bottom:12px}
-.reco{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.rc{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.rc .lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.rc .now{color:var(--muted);font-family:var(--font-mono);font-size:.9rem}
-.rc .new{font-family:var(--font-mono);font-size:1.6rem;font-weight:700;line-height:1.2}
-.rc .note{font-size:.84rem;color:var(--muted)}
-.rc .note b{font-weight:700}
-.rc .warnline{font-size:.82rem;color:var(--warn);font-weight:600;margin-top:4px}
-.why{margin:14px 0 0;padding-left:1.3em;display:flex;flex-direction:column;gap:3px;font-size:.9rem;color:var(--muted)}
-.why li.bind{color:var(--ink);font-weight:600}
-.check{margin:10px 0 0;font-size:.9rem}
-.pill{display:inline-block;font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px;margin-left:6px}
-.pill.ok{background:var(--okbg);color:var(--ok)} .pill.warn{background:var(--warnbg);color:var(--warn)} .pill.bad{background:var(--badbg);color:var(--bad)}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
-.chip{font:inherit;font-family:var(--font-mono);font-size:.8rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:4px 11px;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.chartbox{position:relative;margin-top:8px}
-canvas{display:block;width:100%;height:280px}
-.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:.8rem;font-family:var(--font-mono);box-shadow:0 2px 8px rgba(0,0,0,.18);display:none;white-space:nowrap;z-index:2;top:12px}
-.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted);margin-top:8px}
-.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
-.card{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
-dl.s{margin:0;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
-dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
-.sumpanel{border:2px solid var(--accent);padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 4px 18px rgba(10,106,112,.12)}
-.sumpanel h2{color:var(--accent);margin:0;font-size:.85rem}
 .recgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 .rcard{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
-.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.rname{font-size:1.1rem;font-weight:700}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.rname{font-size:1.05rem;font-weight:700}
 .rrow{display:grid;grid-template-columns:64px 1fr;align-items:baseline;gap:2px 10px}
 .rrow .lab{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;grid-row:span 2}
 .rrow .new{font-family:var(--font-mono);font-size:1.9rem;font-weight:700;line-height:1.15;color:var(--accent)}
 .rrow .was{font-size:.82rem;color:var(--muted);font-family:var(--font-mono)}
 .rline{font-size:.9rem;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono)}
 .rwarn{font-size:.82rem;color:var(--warn);font-weight:600}
-.ralert{border-top:1px solid var(--line);padding-top:10px;font-size:.88rem;display:flex;flex-direction:column;gap:3px}
-.ralert .lab{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.ralert b{font-family:var(--font-mono)}
-.ralert .est{color:var(--muted);font-size:.8rem}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
-.dot.w{background:var(--warn)} .dot.c{background:var(--bad)}
-.sumpanel pre{margin:8px 0 0}
-.chk{display:flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer}
-.chk input{width:16px;height:16px;accent-color:var(--accent)}
-.snip{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px;font-weight:600}
-.snipbar{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.sub2{margin:0 0 10px;color:var(--muted);font-size:.9rem;max-width:75ch}
-.pricebox{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.pricebox h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;font-weight:600}
-.foot{font-size:.8rem;color:var(--muted);max-width:75ch;margin:0}
+.pill{display:inline-block;font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.pill.ok{background:var(--okbg);color:var(--ok)} .pill.warn{background:var(--warnbg);color:var(--warn)} .pill.bad{background:var(--badbg);color:var(--bad)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td{font-family:var(--font-mono);font-size:.92rem}
+td.st{font-family:var(--font-body);font-weight:600}
+td.st.ok,.pos{color:var(--ok)} td.st.warn,.neg{color:var(--warn)} td.st.bad{color:var(--bad)}
+tr.cur td:first-child::after{content:" *";color:var(--muted)}
+.notes{margin:8px 0 0;padding-left:1.2em;font-size:.84rem;color:var(--muted)}
+.snip{display:flex;align-items:center}
+pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;font-family:var(--font-mono);font-size:.84rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
+.snipbar{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.reshead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px}
+.reshead h2{margin:0;font-size:1rem;color:var(--ink);letter-spacing:.02em}
+.inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,220px));gap:12px;margin-bottom:12px}
+.why{margin:14px 0 0;padding-left:1.3em;display:flex;flex-direction:column;gap:3px;font-size:.9rem;color:var(--muted)}
+.why li.bind{color:var(--ink);font-weight:600}
+.check{margin:10px 0 0;font-size:.9rem}
+.check .pill{margin-left:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.chip{font:inherit;font-family:var(--font-mono);font-size:.8rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chartbox{position:relative;margin-top:8px}
+canvas{display:block;width:100%;height:280px}
+.ctip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:.8rem;font-family:var(--font-mono);box-shadow:0 2px 8px rgba(0,0,0,.18);display:none;white-space:nowrap;z-index:2;top:12px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+dl.s{margin:0;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+dl.s dt{color:var(--muted)} dl.s dd{margin:0;text-align:right;font-family:var(--font-mono)}
+.foot{font-size:.8rem;color:var(--muted);margin:0}
 @media (prefers-reduced-motion:reduce){.drop{transition:none}}
 </style>
 </head>
 <body>
 <main class="wrap">
-  <header>
-    <h1>Pod Rightsizer</h1>
-    <p class="lede">Unggah CSV CPU dan Memory dari Grafana. Hasilnya rekomendasi request dan limit, biaya sekarang, dan estimasi penghematan per bulan.</p>
+  <header class="top">
+    <div>
+      <h1>Pod Rightsizer</h1>
+      <p class="lede" data-i18n="lede"></p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="id" aria-pressed="true">ID</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
   </header>
 
   <section class="panel">
-    <h2>1. Ambil data dari Grafana</h2>
+    <h2><span data-i18n="h_get"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_formatted">i</span></h2>
     <ol class="steps">
-      <li>Buka dashboard, atur time range yang mau dianalisis (misal 24 jam atau 14 hari).</li>
-      <li>Arahkan mouse ke judul panel <b>CPU Usage</b> atau <b>Memory Usage</b>, klik menu titik tiga, pilih <b>Inspect</b>, lalu <b>Data</b>.</li>
-      <li>Buka <b>Data options</b>. Di <b>Show data frame</b> pilih <b>Series joined by time</b>.</li>
-      <li>Matikan <b>Formatted data</b> supaya angkanya murni, tanpa teks <code>MiB</code> atau <code>milicore</code>.</li>
-      <li>Klik <b>Download CSV</b>. Ulangi untuk panel satunya kalau mau hitung CPU dan Memory sekaligus.</li>
+      <li data-i18n="step1"></li><li data-i18n="step2"></li><li data-i18n="step3"></li><li data-i18n="step4"></li>
     </ol>
   </section>
 
   <section class="panel">
-    <h2>2. Unggah CSV</h2>
+    <h2><span data-i18n="h_upload"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_privacy">i</span></h2>
     <div class="drop" id="drop">
       <input class="vh" type="file" id="file" accept=".csv,text/csv" multiple>
-      <label class="btn" for="file">Pilih file CSV</label>
-      <button class="btn ghost" type="button" id="sample">Pakai data contoh</button>
-      <span class="hint">Boleh pilih beberapa file sekaligus: CPU, Memory, jumlah pod (Pod Available, Pod Desired), dan Monthly Cost. File dibaca di browser, tidak diunggah ke mana pun.</span>
+      <label class="btn" for="file" data-i18n="btn_choose"></label>
+      <button class="btn ghost" type="button" id="sample" data-i18n="btn_sample"></button>
+      <span class="hint" data-i18n="drop_hint"></span>
     </div>
     <ul id="status" role="status"></ul>
-    <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;max-width:300px">
-      <label class="f">Biaya service sekarang ($ per bulan), opsional<input type="number" id="costNow" min="0" step="any" placeholder="misal 89.40"></label>
-      <span class="hint">Boleh dikosongkan, biaya akan diestimasi dengan harga standar. Isi untuk hasil yang lebih akurat: ambil dari panel Monthly Cost $, atau unggah CSV panel itu.</span>
+    <div style="margin-top:14px;max-width:300px">
+      <label class="f"><span><span data-i18n="cost_label"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_cost">i</span></span><input type="number" id="costNow" min="0" step="any" data-i18n-ph="cost_ph"></label>
     </div>
     <details id="settings">
-      <summary>Pengaturan</summary>
+      <summary data-i18n="settings"></summary>
       <div class="settings">
-        <label class="f">Target HPA (%)<input type="number" id="target" value="80" min="1" max="200" step="1"></label>
-        <label class="f">Ruang aman (poin %)<input type="number" id="margin" value="5" min="0" max="50" step="1"></label>
-        <label class="f">Jaga rata-rata HPA di<select id="basis"><option value="p95">p95</option><option value="p99" selected>p99</option><option value="max">Maks</option></select></label>
-        <label class="f">Buffer pod tunggal (%)<input type="number" id="buffer" value="15" min="0" max="100" step="1"></label>
-        <label class="f">Limit = request x<input type="number" id="mult" value="2" min="1" max="5" step="0.1"></label>
-        <label class="f">Minimum request<input type="number" id="minReq" value="25" min="0" step="1"></label>
-        <label class="f">Alert warning (% request)<input type="number" id="warnPct" value="80" min="1" max="200" step="1"></label>
-        <label class="f">Alert critical (% request)<input type="number" id="critPct" value="90" min="1" max="200" step="1"></label>
-        <label class="f">Jumlah pod rata-rata<input type="number" id="pods" value="2" min="0.1" step="0.1"></label>
+        <label class="f"><span><span data-i18n="s_target"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_target">i</span></span><input type="number" id="target" value="80" min="1" max="200" step="1"></label>
+        <label class="f"><span><span data-i18n="s_margin"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_margin">i</span></span><input type="number" id="margin" value="5" min="0" max="50" step="1"></label>
+        <label class="f"><span><span data-i18n="s_basis"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_basis">i</span></span><select id="basis"><option value="p95">p95</option><option value="p99" selected>p99</option><option value="max" data-i18n="opt_max"></option></select></label>
+        <label class="f"><span><span data-i18n="s_buffer"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_buffer">i</span></span><input type="number" id="buffer" value="15" min="0" max="100" step="1"></label>
+        <label class="f"><span><span data-i18n="s_mult"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_mult">i</span></span><input type="number" id="mult" value="2" min="1" max="5" step="0.1"></label>
+        <label class="f"><span data-i18n="s_min"></span><input type="number" id="minReq" value="25" min="0" step="1"></label>
+        <label class="f"><span data-i18n="s_warn"></span><input type="number" id="warnPct" value="80" min="1" max="200" step="1"></label>
+        <label class="f"><span data-i18n="s_crit"></span><input type="number" id="critPct" value="90" min="1" max="200" step="1"></label>
+        <label class="f"><span><span data-i18n="s_pods"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_pods">i</span></span><input type="number" id="pods" value="2" min="0.1" step="0.1"></label>
       </div>
       <div class="pricebox">
-        <h3>Sidecar di pod (opsional)</h3>
-        <p class="hint" style="margin:0 0 8px">Angka di tool adalah total pod. Kalau pod punya container lain (misal nginx), isi request dan limit-nya supaya snippet <code>resources</code> hanya berisi bagian container utama.</p>
+        <h3><span data-i18n="h_container"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_container">i</span></h3>
         <div class="settings" style="margin-top:0">
-          <label class="f">CPU request sidecar (m)<input type="number" id="scCpuReq" value="0" min="0" step="1"></label>
-          <label class="f">CPU limit sidecar (m)<input type="number" id="scCpuLim" value="0" min="0" step="1"></label>
-          <label class="f">Memory request sidecar (MiB)<input type="number" id="scMemReq" value="0" min="0" step="1"></label>
-          <label class="f">Memory limit sidecar (MiB)<input type="number" id="scMemLim" value="0" min="0" step="1"></label>
+          <label class="f"><span data-i18n="c_main"></span><input type="text" id="nameMain" value="app"></label>
+          <label class="f"><span data-i18n="c_side"></span><input type="text" id="nameSide" value="sidecar"></label>
+          <label class="f"><span data-i18n="sc_cpu_req"></span><input type="number" id="scCpuReq" value="0" min="0" step="1"></label>
+          <label class="f"><span data-i18n="sc_cpu_lim"></span><input type="number" id="scCpuLim" value="0" min="0" step="1"></label>
+          <label class="f"><span data-i18n="sc_mem_req"></span><input type="number" id="scMemReq" value="0" min="0" step="1"></label>
+          <label class="f"><span data-i18n="sc_mem_lim"></span><input type="number" id="scMemLim" value="0" min="0" step="1"></label>
         </div>
       </div>
       <div class="pricebox">
-        <h3>Harga untuk hitung biaya</h3>
-        <p class="hint" style="margin:0 0 8px">Otomatis. Tanpa biaya sekarang, dipakai estimasi harga standar. Dengan biaya sekarang, harga dihitung dari biaya itu (isi di bagian Unggah CSV).</p>
-        <div class="settings" style="margin-top:0">
-          <label class="chk"><input type="checkbox" id="priceManualOn"> Isi harga sendiri (matikan hitung otomatis)</label>
-        </div>
-        <div class="settings" id="priceManual">
-          <label class="f">Harga CPU ($ per core-jam)<input type="number" id="priceCore" value="0.035" min="0" step="0.001"></label>
-          <label class="f">Harga Memory ($ per GiB-jam)<input type="number" id="priceGiB" value="0.005" min="0" step="0.001"></label>
+        <h3><span data-i18n="h_price"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_price">i</span></h3>
+        <label class="chk"><input type="checkbox" id="priceManualOn"> <span data-i18n="price_manual_on"></span></label>
+        <div class="settings" id="priceManual" hidden>
+          <label class="f"><span data-i18n="price_cpu"></span><input type="number" id="priceCore" value="0.035" min="0" step="0.001"></label>
+          <label class="f"><span data-i18n="price_mem"></span><input type="number" id="priceGiB" value="0.005" min="0" step="0.001"></label>
         </div>
         <div class="settings" id="priceDetect" hidden>
-          <label class="f">Rasio harga Memory per GiB ÷ CPU per core<input type="number" id="ratio" value="0.14" min="0.001" step="0.01"></label>
-          <label class="f" id="xwrap-cpu" hidden>Request CPU sekarang (m)<input type="number" id="xreq-cpu" min="0" step="any"></label>
-          <label class="f" id="xwrap-memory" hidden>Request Memory sekarang (MiB)<input type="number" id="xreq-memory" min="0" step="any"></label>
+          <label class="f"><span><span data-i18n="ratio"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_ratio">i</span></span><input type="number" id="ratio" value="0.14" min="0.001" step="0.01"></label>
+          <label class="f" id="xwrap-cpu" hidden><span data-i18n="x_req_cpu"></span><input type="number" id="xreq-cpu" min="0" step="any"></label>
+          <label class="f" id="xwrap-memory" hidden><span data-i18n="x_req_mem"></span><input type="number" id="xreq-memory" min="0" step="any"></label>
         </div>
         <p class="hint" id="priceOut" style="margin:10px 0 0"></p>
-        <p class="hint" style="margin:6px 0 0">Satu angka biaya tidak cukup untuk dua harga, jadi harga Memory dihitung dari rasio terhadap harga CPU. Rasio 0.14 hanya contoh, ganti kalau kamu tahu rasio sebenarnya. Jumlah pod diisi otomatis dari rata-rata pod bersamaan di data.</p>
       </div>
     </details>
   </section>
 
   <section class="panel sumpanel" id="summary" hidden aria-labelledby="h-sum">
-    <h2 id="h-sum">Ringkasan dan rekomendasi</h2>
+    <h2 id="h-sum" data-i18n="h_summary"></h2>
     <div class="hero" id="hero"></div>
     <div class="recgrid" id="recgrid"></div>
-    <details style="margin:0" open><summary>Snippet konfigurasi untuk disalin</summary>
-      <p class="hint" style="margin:8px 0 0">Format Helm values. Sesuaikan dengan chart kamu. Angka resources sudah dikurangi sidecar kalau kamu mengisinya di Pengaturan.</p>
-      <h3 class="snip">resources</h3>
+    <div>
+      <h3 class="snip"><span data-i18n="h_alert"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_alert">i</span></h3>
+      <div class="tablewrap"><table id="alerttable"></table></div>
+      <ul class="notes" id="alertnote"></ul>
+    </div>
+    <details style="margin:0" open>
+      <summary data-i18n="h_snip"></summary>
+      <h3 class="snip"><span>resources</span><span class="tip" tabindex="0" role="note" data-tipkey="tip_snip">i</span></h3>
       <pre id="resyaml"></pre>
-      <div class="snipbar"><button class="btn ghost" type="button" id="copyRes">Salin resources</button><span class="hint" id="copiedRes"></span></div>
-      <h3 class="snip">alerts</h3>
-      <p class="hint" style="margin:0">Satu blok hanya punya satu <code>target</code>, jadi contoh ini memakai level critical. Untuk warning, buat alert kedua.</p>
+      <div class="snipbar"><button class="btn ghost" type="button" id="copyRes" data-i18n="copy"></button><span class="hint" id="copiedRes"></span></div>
+      <h3 class="snip"><span data-i18n="sn_alerts"></span></h3>
       <pre id="alertyaml"></pre>
-      <div class="snipbar"><button class="btn ghost" type="button" id="copyAlert">Salin alerts</button><span class="hint" id="copiedAlert"></span></div>
+      <div class="snipbar"><button class="btn ghost" type="button" id="copyAlert" data-i18n="copy"></button><span class="hint" id="copiedAlert"></span></div>
+      <h3 class="snip"><span>PromQL</span><span class="tip" tabindex="0" role="note" data-tipkey="tip_prom">i</span></h3>
+      <pre id="promql"></pre>
+      <div class="snipbar"><button class="btn ghost" type="button" id="copyProm" data-i18n="copy"></button><span class="hint" id="copiedProm"></span></div>
     </details>
   </section>
 
   <section class="panel" id="podsec" hidden aria-labelledby="h-pods">
-    <h2 id="h-pods">Jumlah pod</h2>
-    <p class="sub2" id="podnote"></p>
+    <h2 id="h-pods"><span data-i18n="h_pods"></span><span class="tip" tabindex="0" role="note" data-tipkey="tip_podsec">i</span></h2>
     <div class="tablewrap"><table id="podtable"></table></div>
-    <div class="chartbox"><canvas id="cv-pods" role="img" aria-label="Grafik jumlah pod dari waktu ke waktu"></canvas><div class="tip" id="tip-pods"></div></div>
+    <div class="chartbox"><canvas id="cv-pods" role="img" aria-label="Pod count"></canvas><div class="ctip" id="tip-pods"></div></div>
     <div class="legend" id="lg-pods"></div>
   </section>
 
   <div id="results" class="wrap" style="gap:16px"></div>
 
-  <p class="foot">Perkiraan. Request dihitung dari rata-rata antar pod (cara HPA menghitung utilisasi), pod tunggal tertinggi (p99), dan minimum. Biaya mengikuti request: jumlah pod x 730 jam x request x harga, sama seperti panel Monthly Cost. Data tanpa satuan: memory dianggap bytes kalau angkanya besar, CPU dianggap milicore.</p>
+  <p class="foot"><span data-i18n="foot"></span><span class="tip r" tabindex="0" role="note" data-tipkey="tip_method">i</span></p>
 </main>
 
 <script src="core.js"></script>
 <script>
+/* ---------- bahasa / language ---------- */
+const I18N = {
+  id: {
+    lede: 'Unggah CSV CPU dan Memory dari Grafana. Dapat rekomendasi request, limit, alert, dan estimasi hemat biaya.',
+    h_get: '1. Ambil data',
+    step1: 'Atur time range di Grafana.',
+    step2: 'Panel CPU atau Memory Usage: menu ⋮, Inspect, Data.',
+    step3: 'Data options: Series joined by time, Formatted data off.',
+    step4: 'Download CSV (ulangi untuk panel lain).',
+    tip_formatted: 'Formatted data off membuat angka murni tanpa teks MiB atau milicore. File berformat tetap terbaca.',
+    h_upload: '2. Unggah CSV',
+    tip_privacy: 'File dibaca di browser dan tidak diunggah ke mana pun.',
+    btn_choose: 'Pilih file CSV', btn_sample: 'Pakai data contoh',
+    drop_hint: 'Boleh banyak file: CPU, Memory, jumlah pod, Monthly Cost.',
+    cost_label: 'Biaya sekarang ($/bulan), opsional', cost_ph: 'misal 89.40',
+    tip_cost: 'Kosong: biaya diestimasi dengan harga standar. Isi untuk hasil lebih akurat, ambil dari panel Monthly Cost $ atau unggah CSV-nya.',
+    settings: 'Pengaturan',
+    s_target: 'Target HPA (%)', tip_target: 'Rata-rata utilisasi antar pod yang memicu scale-up.',
+    s_margin: 'Ruang aman (poin %)', tip_margin: 'Dikurangkan dari target HPA supaya request tidak mepet ambang.',
+    s_basis: 'Rata-rata HPA di', tip_basis: 'Persentil rata-rata antar pod yang dijaga di bawah target. Pakai Maks untuk memory yang naik pelan.',
+    opt_max: 'Maks',
+    s_buffer: 'Buffer pod tunggal (%)', tip_buffer: 'Request minimal sebesar p99 pod tunggal ditambah persen ini.',
+    s_mult: 'Limit = request ×', tip_mult: 'Pengali limit terhadap request.',
+    s_min: 'Minimum request', s_warn: 'Alert warning (% request)', s_crit: 'Alert critical (% request)',
+    s_pods: 'Jumlah pod rata-rata', tip_pods: 'Terisi otomatis dari rata-rata pod bersamaan di data.',
+    h_container: 'Container di pod (opsional)',
+    tip_container: 'Angka di tool adalah total pod. Isi sidecar (misal nginx) agar rekomendasi dan alert dibagi per container. Nama dipakai di PromQL, samakan dengan nama container di Kubernetes.',
+    c_main: 'Nama container utama', c_side: 'Nama sidecar',
+    sc_cpu_req: 'CPU request sidecar (m)', sc_cpu_lim: 'CPU limit sidecar (m)', sc_mem_req: 'Memory request sidecar (MiB)', sc_mem_lim: 'Memory limit sidecar (MiB)',
+    h_price: 'Harga',
+    tip_price: 'Otomatis: tanpa biaya sekarang dipakai harga standar, dengan biaya sekarang harga dihitung darinya. Satu biaya tidak cukup untuk dua harga, jadi harga memory memakai rasio terhadap CPU.',
+    price_manual_on: 'Isi harga sendiri', price_cpu: 'Harga CPU ($/core-jam)', price_mem: 'Harga memory ($/GiB-jam)',
+    ratio: 'Rasio harga memory/CPU', tip_ratio: 'Harga memory per GiB dibagi harga CPU per core. 0.14 hanya contoh.',
+    x_req_cpu: 'Request CPU sekarang (m)', x_req_mem: 'Request memory sekarang (MiB)',
+    price_estimate: 'Estimasi harga standar: CPU {core}/core-jam, memory {gib}/GiB-jam.',
+    price_detected: 'Harga terdeteksi: CPU {core}/core-jam, memory {gib}/GiB-jam.',
+    price_fallback: '{warn} Memakai harga standar sementara.',
+    err_empty: 'File kosong atau hanya berisi header.', err_nopods: 'Tidak ada kolom pod berisi angka. Pakai Series joined by time.',
+    err_nonum: 'Tidak ada kolom berisi angka.', err_cost: 'Isi biaya sekarang.', err_pods: 'Isi jumlah pod.', err_req: 'Butuh request CPU dan memory.', err_ratio: 'Isi rasio harga.',
+    err_nocost: 'tidak ada angka biaya.', err_read: 'gagal dibaca.',
+    st_res: '{kind} · {name} · {used} dari {total} pod · {pts} titik', st_cost: 'Biaya · {name} · {v}/bulan', st_pods: 'Jumlah pod · {label} · {n} titik',
+    sample_badge: 'Data contoh',
+    h_summary: 'Ringkasan',
+    hero_save: 'Estimasi hemat per bulan', hero_up: 'Estimasi biaya naik per bulan',
+    hero_sub: 'Sekarang {now}, sesudah {nw} ({pct}% {dir})', lower: 'lebih rendah', higher: 'lebih tinggi',
+    hero_est: 'Estimasi harga standar', tip_est: 'Biaya sekarang belum diisi, jadi memakai harga standar. Isi biaya sekarang agar lebih akurat.',
+    hero_partial: 'Hanya resource yang dimuat.',
+    card_title: '{res} (total pod)', dir_down: 'Turunkan request {pct}%', dir_up: 'Naikkan request {pct}%', dir_same: 'Request tetap',
+    lab_request: 'Request', lab_limit: 'Limit', now_word: 'sekarang {v}', limit_note: 'request × {m}',
+    risk_cpu: 'Pod tertinggi {v} di atas limit ini. Risiko throttle.', risk_mem: 'Pod tertinggi {v} di atas limit ini. Risiko OOM.',
+    cost_line: 'Biaya {a} → {b}', saves: 'hemat {v}', rises: 'naik {v}',
+    per_container: 'Per container: {main} request {r1}, limit {l1}. {side} request {r2}, limit {l2}.',
+    h_alert: 'Rekomendasi alert', tip_alert: 'Ambang per pod sebagai persen request. Total pod dihitung dari data CSV, per container dari request tiap container.',
+    th_res: 'Resource', th_scope: 'Cakupan', th_req: 'Request', th_warn: 'Warning ({p}%)', th_crit: 'Critical ({p}%)', scope_total: 'Total pod',
+    alert_note: '{res}: warning terlewati di {w}% sampel, critical di {c}%.', noisy: ' Sering, pakai durasi minimal (for).',
+    no_split: 'Isi sidecar di Pengaturan untuk alert per container.',
+    h_snip: 'Snippet untuk disalin', tip_snip: 'Format Helm values, sesuaikan dengan chart kamu. Resources sudah dikurangi sidecar. Satu blok alerts hanya punya satu target, jadi memakai level critical.',
+    sn_alerts: 'alerts (total pod)', tip_prom: 'Ganti NAMESPACE dan DEPLOYMENT. Pasang durasi minimal (for) sekitar 5 menit.',
+    copy: 'Salin', copied: 'Tersalin.', copy_manual: 'Teks dipilih, tekan Ctrl+C.',
+    yaml_main: '# Container utama = total pod dikurangi sidecar.', yaml_total: '# Total pod (request / limit): {v}',
+    h_pods: 'Jumlah pod', tip_podsec: 'Berjalan dihitung dari pod yang punya data di CSV CPU atau Memory. Unggah CSV Pod Available atau Pod Desired untuk seri lain.',
+    pods_running: 'Pod berjalan (dari CSV {res}{rev})', rev_sel: ', revisi terpilih',
+    th_series: 'Seri', th_last: 'Terakhir', th_min: 'Min', th_median: 'Median', th_max: 'Maks', th_pts: 'Titik',
+    req_now: 'Request sekarang ({u})', lim_now: 'Limit sekarang ({u})', fill_req: 'Isi request sekarang untuk melihat rekomendasi.',
+    chips: 'Revisi pod yang dihitung:',
+    why_hpa: 'HPA: rata-rata antar pod {b} {v} ÷ {p}% = {r}', why_pod: 'Pod tunggal: p99 {v} + {b}% = {r}', why_min: 'Minimum: {v}', used: '(dipakai)',
+    basis_max: 'maks',
+    check: 'Dengan request {r}: rata-rata maks {m}% dari request (target {t}%), {o}% waktu di atas target.',
+    st_ok: 'Aman', st_warn: 'Mepet', st_bad: 'Scale-up',
+    d_chart: 'Grafik rata-rata antar pod', d_stats: 'Statistik', d_sim: 'Request lain', cands: 'Kandidat request (pisahkan koma)',
+    c_avg: 'Rata-rata antar pod', c_util: 'Utilisasi vs request', c_single: 'Pod tunggal', c_conc: 'Pod bersamaan',
+    c_median: 'median', c_maxc: 'maks', c_pct_lim: '% pod tertinggi dari limit', c_above: 'di atas {t}%', c_time: '{v}% waktu',
+    th_util50: 'Util p50', th_util95: 'Util p95', th_utilmax: 'Util maks', th_over: 'Waktu di atas target', th_status: 'Status',
+    lg_avg: 'rata-rata antar pod', lg_max: 'pod tertinggi', lg_thr: 'ambang HPA ({t}% × request)', lg_req: 'request',
+    tt_avg: 'rata-rata', tt_max: 'tertinggi', tt_pods: '{n} pod',
+    foot: 'Estimasi, bukan angka resmi.',
+    tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
+  },
+  en: {
+    lede: 'Upload CPU and memory CSVs from Grafana. Get request, limit and alert recommendations plus estimated cost savings.',
+    h_get: '1. Get the data',
+    step1: 'Set the time range in Grafana.',
+    step2: 'On the CPU or Memory Usage panel: menu ⋮, Inspect, Data.',
+    step3: 'Data options: Series joined by time, Formatted data off.',
+    step4: 'Download CSV (repeat for the other panel).',
+    tip_formatted: 'Formatted data off gives plain numbers without MiB or milicore text. Formatted files still work.',
+    h_upload: '2. Upload CSV',
+    tip_privacy: 'Files are read in your browser and never uploaded.',
+    btn_choose: 'Choose CSV files', btn_sample: 'Use sample data',
+    drop_hint: 'Several files at once: CPU, memory, pod count, Monthly Cost.',
+    cost_label: 'Current cost ($/month), optional', cost_ph: 'e.g. 89.40',
+    tip_cost: 'Empty: cost is estimated with standard prices. Fill it for a more accurate result; take it from the Monthly Cost $ panel or upload its CSV.',
+    settings: 'Settings',
+    s_target: 'HPA target (%)', tip_target: 'Average utilization across pods that triggers a scale-up.',
+    s_margin: 'Safety margin (points)', tip_margin: 'Subtracted from the HPA target so the request stays clear of the threshold.',
+    s_basis: 'Keep HPA average at', tip_basis: 'Percentile of the cross-pod average to keep under the target. Use Max for slowly growing memory.',
+    opt_max: 'Max',
+    s_buffer: 'Single pod buffer (%)', tip_buffer: 'Request is at least the single pod p99 plus this percent.',
+    s_mult: 'Limit = request ×', tip_mult: 'Limit multiplier over request.',
+    s_min: 'Minimum request', s_warn: 'Alert warning (% of request)', s_crit: 'Alert critical (% of request)',
+    s_pods: 'Average pod count', tip_pods: 'Filled from the average concurrent pods in the data.',
+    h_container: 'Containers in the pod (optional)',
+    tip_container: 'Numbers here are pod totals. Fill in a sidecar (e.g. nginx) to split recommendations and alerts per container. Names are used in PromQL, match the Kubernetes container names.',
+    c_main: 'Main container name', c_side: 'Sidecar name',
+    sc_cpu_req: 'Sidecar CPU request (m)', sc_cpu_lim: 'Sidecar CPU limit (m)', sc_mem_req: 'Sidecar memory request (MiB)', sc_mem_lim: 'Sidecar memory limit (MiB)',
+    h_price: 'Prices',
+    tip_price: 'Automatic: without the current cost, standard prices are used; with it, prices are derived from it. One cost cannot give two prices, so the memory price uses a ratio to CPU.',
+    price_manual_on: 'Enter prices myself', price_cpu: 'CPU price ($/core-hour)', price_mem: 'Memory price ($/GiB-hour)',
+    ratio: 'Memory/CPU price ratio', tip_ratio: 'Memory price per GiB divided by CPU price per core. 0.14 is only an example.',
+    x_req_cpu: 'Current CPU request (m)', x_req_mem: 'Current memory request (MiB)',
+    price_estimate: 'Standard price estimate: CPU {core}/core-hour, memory {gib}/GiB-hour.',
+    price_detected: 'Detected prices: CPU {core}/core-hour, memory {gib}/GiB-hour.',
+    price_fallback: '{warn} Using standard prices for now.',
+    err_empty: 'File is empty or has only a header.', err_nopods: 'No pod column has numbers. Use Series joined by time.',
+    err_nonum: 'No column has numbers.', err_cost: 'Enter the current cost.', err_pods: 'Enter the pod count.', err_req: 'Needs CPU and memory requests.', err_ratio: 'Enter the price ratio.',
+    err_nocost: 'no cost number found.', err_read: 'could not be read.',
+    st_res: '{kind} · {name} · {used} of {total} pods · {pts} points', st_cost: 'Cost · {name} · {v}/month', st_pods: 'Pod count · {label} · {n} points',
+    sample_badge: 'Sample data',
+    h_summary: 'Summary',
+    hero_save: 'Estimated saving per month', hero_up: 'Estimated cost increase per month',
+    hero_sub: 'Now {now}, after {nw} ({pct}% {dir})', lower: 'lower', higher: 'higher',
+    hero_est: 'Standard price estimate', tip_est: 'The current cost is empty, so standard prices are used. Enter the current cost for a more accurate figure.',
+    hero_partial: 'Loaded resources only.',
+    card_title: '{res} (pod total)', dir_down: 'Lower request {pct}%', dir_up: 'Raise request {pct}%', dir_same: 'Keep request',
+    lab_request: 'Request', lab_limit: 'Limit', now_word: 'now {v}', limit_note: 'request × {m}',
+    risk_cpu: 'Peak pod {v} is above this limit. Throttle risk.', risk_mem: 'Peak pod {v} is above this limit. OOM risk.',
+    cost_line: 'Cost {a} → {b}', saves: 'saves {v}', rises: 'up {v}',
+    per_container: 'Per container: {main} request {r1}, limit {l1}. {side} request {r2}, limit {l2}.',
+    h_alert: 'Alert recommendations', tip_alert: 'Per-pod thresholds as a percent of request. Pod totals come from the CSV data; per-container values come from each container\'s request.',
+    th_res: 'Resource', th_scope: 'Scope', th_req: 'Request', th_warn: 'Warning ({p}%)', th_crit: 'Critical ({p}%)', scope_total: 'Pod total',
+    alert_note: '{res}: warning crossed in {w}% of samples, critical in {c}%.', noisy: ' Often, add a minimum duration (for).',
+    no_split: 'Fill in a sidecar in Settings for per-container alerts.',
+    h_snip: 'Copy-ready snippets', tip_snip: 'Helm values format, adapt to your chart. Resources already exclude the sidecar. An alerts block has one target, so it uses the critical level.',
+    sn_alerts: 'alerts (pod total)', tip_prom: 'Replace NAMESPACE and DEPLOYMENT. Use a minimum duration (for) of about 5 minutes.',
+    copy: 'Copy', copied: 'Copied.', copy_manual: 'Text selected, press Ctrl+C.',
+    yaml_main: '# Main container = pod total minus sidecar.', yaml_total: '# Pod total (request / limit): {v}',
+    h_pods: 'Pod count', tip_podsec: 'Running counts pods with data in the CPU or memory CSV. Upload Pod Available or Pod Desired CSVs for other series.',
+    pods_running: 'Running pods (from {res} CSV{rev})', rev_sel: ', selected revisions',
+    th_series: 'Series', th_last: 'Last', th_min: 'Min', th_median: 'Median', th_max: 'Max', th_pts: 'Points',
+    req_now: 'Current request ({u})', lim_now: 'Current limit ({u})', fill_req: 'Enter the current request to see recommendations.',
+    chips: 'Pod revisions included:',
+    why_hpa: 'HPA: cross-pod average {b} {v} ÷ {p}% = {r}', why_pod: 'Single pod: p99 {v} + {b}% = {r}', why_min: 'Minimum: {v}', used: '(used)',
+    basis_max: 'max',
+    check: 'With request {r}: average peaks at {m}% of request (target {t}%), {o}% of time above target.',
+    st_ok: 'Safe', st_warn: 'Tight', st_bad: 'Scale-up',
+    d_chart: 'Cross-pod average chart', d_stats: 'Statistics', d_sim: 'Other request values', cands: 'Request candidates (comma separated)',
+    c_avg: 'Cross-pod average', c_util: 'Utilization vs request', c_single: 'Single pod', c_conc: 'Concurrent pods',
+    c_median: 'median', c_maxc: 'max', c_pct_lim: '% of limit at highest pod', c_above: 'above {t}%', c_time: '{v}% of time',
+    th_util50: 'Util p50', th_util95: 'Util p95', th_utilmax: 'Util max', th_over: 'Time above target', th_status: 'Status',
+    lg_avg: 'cross-pod average', lg_max: 'highest pod', lg_thr: 'HPA threshold ({t}% × request)', lg_req: 'request',
+    tt_avg: 'average', tt_max: 'highest', tt_pods: '{n} pods',
+    foot: 'Estimates, not official numbers.',
+    tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
+  }
+};
+let LANG = 'id';
+try { const v = localStorage.getItem('lang'); LANG = v === 'en' || v === 'id' ? v : ((navigator.language || 'id').toLowerCase().startsWith('id') ? 'id' : 'en'); } catch (e) { LANG = (navigator.language || 'id').toLowerCase().startsWith('id') ? 'id' : 'en'; }
+const t = (k, p) => { let s = I18N[LANG][k]; if (s == null) s = I18N.id[k]; if (s == null) return k; if (p) for (const x in p) s = s.split('{' + x + '}').join(p[x]); return s; };
+
 const $ = id => document.getElementById(id);
 const KINDS = ['cpu', 'memory'];
 const NAME = { cpu: 'CPU', memory: 'Memory' };
 const HOURS = 730;
-const S = { data: { cpu: null, memory: null }, reps: [], costFile: '', podsTouched: false, plot: {}, podPlot: null, podList: [], prices: { core: 0.035, gib: 0.005, mode: 'manual' } };
+const S = { data: { cpu: null, memory: null }, reps: [], costFile: '', podsTouched: false, plot: {}, podPlot: null, podList: [], prices: { core: 0.035, gib: 0.005, mode: 'estimate' }, errors: [] };
 
-const nf = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
-const nf1 = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+let nf, nf1;
+const setLocale = () => { const loc = LANG === 'id' ? 'id-ID' : 'en-US'; nf = new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }); nf1 = new Intl.NumberFormat(loc, { maximumFractionDigits: 1, minimumFractionDigits: 1 }); };
+setLocale();
 const fmt = n => !isFinite(n) ? '-' : (Math.abs(n) >= 100 || Number.isInteger(n) ? nf.format(n) : nf1.format(n));
 const usd = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
-const fmtT = t => t == null ? '' : new Date(t).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+const fmtT = tm => tm == null ? '' : new Date(tm).toLocaleString(LANG === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
 const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const tipEl = key => { const s = el('span', 'tip', 'i'); s.tabIndex = 0; s.setAttribute('role', 'note'); s.dataset.tipkey = key; s.dataset.tip = t(key); s.setAttribute('aria-label', t(key)); return s; };
+
+function applyStatic() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n, { u: e.dataset.u }); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
+  document.querySelectorAll('[data-tipkey]').forEach(e => { e.dataset.tip = t(e.dataset.tipkey); e.setAttribute('aria-label', t(e.dataset.tipkey)); });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
+}
 
 /* ---------- kerangka tiap resource ---------- */
 function skeleton(k) {
@@ -255,57 +424,48 @@ function skeleton(k) {
   s.innerHTML = `
     <div class="reshead"><h2>${NAME[k]}</h2><span class="hint" id="src-${k}"></span></div>
     <div class="inputs">
-      <label class="f">Request sekarang (${u})<input type="number" id="req-${k}" min="0" step="any"></label>
-      <label class="f">Limit sekarang (${u})<input type="number" id="lim-${k}" min="0" step="any"></label>
+      <label class="f"><span data-i18n="req_now" data-u="${u}"></span><input type="number" id="req-${k}" min="0" step="any"></label>
+      <label class="f"><span data-i18n="lim_now" data-u="${u}"></span><input type="number" id="lim-${k}" min="0" step="any"></label>
     </div>
     <ol class="why" id="why-${k}"></ol>
     <p class="check" id="check-${k}"></p>
     <div class="chips" id="chips-${k}" hidden></div>
-    <details open data-chart="${k}"><summary>Grafik rata-rata antar pod</summary>
-      <div class="chartbox"><canvas id="cv-${k}" role="img" aria-label="Grafik rata-rata ${NAME[k]} antar pod"></canvas><div class="tip" id="tip-${k}"></div></div>
+    <details open data-chart="${k}"><summary data-i18n="d_chart"></summary>
+      <div class="chartbox"><canvas id="cv-${k}" role="img" aria-label="${NAME[k]}"></canvas><div class="ctip" id="tip-${k}"></div></div>
       <div class="legend" id="lg-${k}"></div>
     </details>
-    <details><summary>Detail statistik</summary><div class="cards" id="cards-${k}"></div></details>
-    <details><summary>Simulasi request lain</summary>
-      <label class="f" style="max-width:380px;margin-top:10px">Kandidat request (pisahkan dengan koma)<input type="text" id="cands-${k}"></label>
+    <details><summary data-i18n="d_stats"></summary><div class="cards" id="cards-${k}"></div></details>
+    <details><summary data-i18n="d_sim"></summary>
+      <label class="f" style="max-width:380px;margin-top:10px"><span data-i18n="cands"></span><input type="text" id="cands-${k}"></label>
       <div class="tablewrap"><table id="sim-${k}"></table></div>
     </details>`;
   return s;
 }
 for (const k of KINDS) $('results').appendChild(skeleton(k));
 
-/* ---------- data contoh (buatan, bukan data asli) ---------- */
+/* ---------- data contoh (buatan) ---------- */
 function sampleCSV(k) {
   let seed = k === 'cpu' ? 5 : 11;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const n = 720, step = 120000, t0 = Date.UTC(2026, 9, 12, 2, 0, 0);
   const pods = [
-    { name: 'contoh-app-5d9c7b6f8-a1b2c', from: 0, to: 720 },
-    { name: 'contoh-app-5d9c7b6f8-d3e4f', from: 0, to: 420 },
-    { name: 'contoh-app-7c4f9d2a1-g5h6i', from: 240, to: 720 },
-    { name: 'contoh-app-7c4f9d2a1-j7k8l', from: 240, to: 720 }
+    { name: 'sample-app-5d9c7b6f8-a1b2c', from: 0, to: 720 }, { name: 'sample-app-5d9c7b6f8-d3e4f', from: 0, to: 420 },
+    { name: 'sample-app-7c4f9d2a1-g5h6i', from: 240, to: 720 }, { name: 'sample-app-7c4f9d2a1-j7k8l', from: 240, to: 720 }
   ];
   const lines = [['Time', ...pods.map(p => p.name), 'requests', 'limits'].join(',')];
   for (let i = 0; i < n; i++) {
     const row = [t0 + i * step];
     for (const p of pods) {
       if (i < p.from || i >= p.to) { row.push('undefined'); continue; }
-      if (k === 'memory') {
-        const age = i - p.from, v = 600 - 180 * Math.exp(-age / 60) + (rnd() - .5) * 18;
-        row.push(Math.round(v * 1048576));
-      } else {
-        const burst = rnd() > .985 ? 120 + rnd() * 200 : 0;
-        row.push(Math.round((40 + rnd() * 50 + burst) * 10) / 10);
-      }
+      if (k === 'memory') { const age = i - p.from, v = 600 - 180 * Math.exp(-age / 60) + (rnd() - .5) * 18; row.push(Math.round(v * 1048576)); }
+      else { const burst = rnd() > .985 ? 120 + rnd() * 200 : 0; row.push(Math.round((40 + rnd() * 50 + burst) * 10) / 10); }
     }
     row.push(k === 'memory' ? 866123776 : 750, k === 'memory' ? 2046820352 : 2000);
     lines.push(row.join(','));
   }
   return lines.join('\n');
 }
-
 function sampleReps() {
-  // Jumlah pod contoh: available mengikuti pod yang berjalan, desired kadang satu di atasnya.
   let seed = 3;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const t0 = Date.UTC(2026, 9, 12, 2, 0, 0), spans = [[0, 720], [0, 420], [240, 720], [240, 720]];
@@ -316,8 +476,9 @@ function sampleReps() {
     if (i % 90 === 0) extra = rnd() > .6 ? 1 : 0;
     av.push((t0 + i * 120000) + ',' + n); de.push((t0 + i * 120000) + ',' + (n + extra));
   }
-  return [{ name: 'Pod Available-data-as-contoh.csv', text: av.join('\n') }, { name: 'Pod Desired-data-as-contoh.csv', text: de.join('\n') }];
+  return [{ name: 'Pod Available-data-as-sample.csv', text: av.join('\n') }, { name: 'Pod Desired-data-as-sample.csv', text: de.join('\n') }];
 }
+const sampleItems = () => KINDS.map(k => ({ name: 'sample-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps());
 
 /* ---------- muat data ---------- */
 function recompute(k, fresh) {
@@ -338,20 +499,20 @@ function loadTexts(items, isSample) {
     const rows = Core.parseCSV(it.text);
     if (/monthly[ _-]*cost/i.test(it.name)) {
       const v = Core.parseCost(rows);
-      if (v == null) errors.push(it.name + ': tidak ada angka biaya.'); else { $('costNow').value = Math.round(v * 100) / 100; $('priceManualOn').checked = false; S.costFile = it.name; }
+      if (v == null) errors.push({ name: it.name, code: 'err_nocost' }); else { $('costNow').value = Math.round(v * 100) / 100; $('priceManualOn').checked = false; S.costFile = it.name; }
       continue;
     }
     if (Core.isReplicas(rows, it.name)) {
       const a = Core.analyzeSeries(rows, it.name);
-      if (a.error) { errors.push(it.name + ': ' + a.error); continue; }
+      if (a.error) { errors.push({ name: it.name, code: a.error }); continue; }
       for (const se of a.series) { S.reps = S.reps.filter(r => r.label !== se.label); S.reps.push({ label: se.label, pts: se.pts, name: it.name, sample: !!isSample }); }
       continue;
     }
     const probe = Core.analyze(rows, { filename: it.name });
-    if (probe.error) { errors.push(it.name + ': ' + probe.error); continue; }
+    if (probe.error) { errors.push({ name: it.name, code: probe.error }); continue; }
     S.data[probe.kind] = { rows, name: it.name, sample: isSample, excluded: new Set(), res: null };
     const e = recompute(probe.kind, true);
-    if (e) errors.push(it.name + ': ' + e);
+    if (e) errors.push({ name: it.name, code: e });
   }
   if (!S.podsTouched) {
     const d = S.data.memory && S.data.memory.res ? S.data.memory : S.data.cpu && S.data.cpu.res ? S.data.cpu : null;
@@ -361,57 +522,52 @@ function loadTexts(items, isSample) {
   renderAll();
 }
 async function loadFiles(files) {
-  const items = [];
-  for (const f of files) { try { items.push({ name: f.name, text: await f.text() }); } catch (e) { S.errors = [f.name + ': gagal dibaca']; } }
+  const items = [], errs = [];
+  for (const f of files) { try { items.push({ name: f.name, text: await f.text() }); } catch (e) { errs.push({ name: f.name, code: 'err_read' }); } }
   loadTexts(items, false);
+  if (errs.length) { S.errors = S.errors.concat(errs); renderStatus(); }
   focusSummary();
 }
-
 function focusSummary() { if (!$('summary').hidden) $('summary').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }
 
-/* ---------- render ---------- */
-function cfg(k) {
-  return { kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
-    buffer: num('buffer'), mult: num('mult') || 2, warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: num('pods'), hours: HOURS, priceCore: S.prices.core, priceGiB: S.prices.gib };
-}
-function renderStatus() {
-  const ul = $('status'); ul.textContent = '';
-  for (const k of KINDS) {
-    const d = S.data[k]; if (!d || !d.res) continue;
-    const r = d.res, li = el('li');
-    li.append(el('b', '', NAME[k]), document.createTextNode(` · ${d.name} · ${r.podsUsed} dari ${r.podsTotal} pod · ${r.series.length} titik waktu`));
-    const t0 = r.series[0].t, t1 = r.series[r.series.length - 1].t;
-    if (t0 != null) li.append(document.createTextNode(` · ${fmtT(t0)} sampai ${fmtT(t1)}`));
-    if (d.sample) li.append(el('span', 'badge', 'Data contoh, bukan data asli'));
-    ul.appendChild(li);
-  }
-  if (S.costFile) { const li = el('li'); li.append(el('b', '', 'Biaya'), document.createTextNode(` · ${S.costFile} · ${usd(num('costNow'))} per bulan`)); ul.appendChild(li); }
-  for (const r of S.reps) {
-    const li = el('li'); li.append(el('b', '', 'Jumlah pod'), document.createTextNode(` · ${r.label} · ${r.pts.length} titik waktu`));
-    if (r.sample) li.append(el('span', 'badge', 'Data contoh, bukan data asli'));
-    ul.appendChild(li);
-  }
-  for (const e of S.errors || []) ul.appendChild(el('li', 'err', e));
-}
+/* ---------- harga ---------- */
 function loadedReq(k) { const d = S.data[k]; return d && d.res ? num('req-' + k) : num('xreq-' + k); }
 function getPrices() {
   const man = { core: num('priceCore'), gib: num('priceGiB'), mode: 'manual' };
   if ($('priceManualOn').checked) return man;
   if (!(num('costNow') > 0)) return Object.assign(man, { mode: 'estimate' });
   const p = Core.detectPrices({ cost: num('costNow'), pods: num('pods'), hours: HOURS, reqCpu: loadedReq('cpu'), reqMem: loadedReq('memory'), ratio: num('ratio') });
-  if (p.error) return Object.assign(man, { warn: p.error });
+  if (p.error) return Object.assign(man, { mode: 'estimate', warn: t(p.error) });
   return { core: p.priceCore, gib: p.priceGiB, mode: 'detect' };
 }
 function renderPrices() {
   const manual = $('priceManualOn').checked, detect = !manual && num('costNow') > 0;
   $('priceManual').hidden = !manual; $('priceDetect').hidden = !detect;
   for (const k of KINDS) $('xwrap-' + k).hidden = !(detect && !(S.data[k] && S.data[k].res));
-  const o = $('priceOut'), p = S.prices;
-  o.textContent = manual ? '' : p.mode === 'estimate'
-    ? `Biaya belum diisi, jadi memakai estimasi harga standar: CPU $${p.core} per core-jam, Memory $${p.gib} per GiB-jam. Isi biaya sekarang agar lebih akurat.`
-    : p.mode === 'detect'
-      ? `Harga terdeteksi: CPU $${p.core.toFixed(4)} per core-jam, Memory $${p.gib.toFixed(5)} per GiB-jam.`
-      : `${p.warn} Memakai harga standar sementara.`;
+  const p = S.prices;
+  $('priceOut').textContent = manual ? '' : p.warn ? t('price_fallback', { warn: p.warn })
+    : p.mode === 'detect' ? t('price_detected', { core: '$' + p.core.toFixed(4), gib: '$' + p.gib.toFixed(5) })
+    : t('price_estimate', { core: '$' + p.core, gib: '$' + p.gib });
+}
+
+/* ---------- render ---------- */
+function cfg(k) {
+  return { kind: k, req: num('req-' + k), lim: num('lim-' + k), target: num('target') || 80, margin: num('margin'), basis: $('basis').value,
+    buffer: num('buffer'), mult: num('mult') || 2, warnPct: num('warnPct') || 80, critPct: num('critPct') || 90, min: num('minReq'), pods: num('pods'),
+    hours: HOURS, priceCore: S.prices.core, priceGiB: S.prices.gib };
+}
+function renderStatus() {
+  const ul = $('status'); ul.textContent = '';
+  const badge = li => li.append(el('span', 'badge', t('sample_badge')));
+  for (const k of KINDS) {
+    const d = S.data[k]; if (!d || !d.res) continue;
+    const r = d.res, li = el('li', '', t('st_res', { kind: NAME[k], name: d.name, used: r.podsUsed, total: r.podsTotal, pts: r.series.length }));
+    if (d.sample) badge(li);
+    ul.appendChild(li);
+  }
+  if (S.costFile) ul.appendChild(el('li', '', t('st_cost', { name: S.costFile, v: usd(num('costNow')) })));
+  for (const r of S.reps) { const li = el('li', '', t('st_pods', { label: r.label, n: r.pts.length })); if (r.sample) badge(li); ul.appendChild(li); }
+  for (const e of S.errors || []) ul.appendChild(el('li', 'err', e.name + ': ' + t(e.code)));
 }
 function renderAll() {
   renderStatus();
@@ -430,27 +586,68 @@ function renderSummary(plans) {
   if (!plans.length) return;
   const now = plans.reduce((s, x) => s + x.p.costNow, 0), nw = plans.reduce((s, x) => s + x.p.costNew, 0), sv = now - nw;
   const hero = $('hero'); hero.className = 'hero' + (sv < 0 ? ' warn' : ''); hero.textContent = '';
-  hero.append(el('span', 'tag', sv < 0 ? 'Estimasi biaya naik per bulan' : 'Estimasi hemat per bulan'), el('div', 'big', usd(Math.abs(sv))),
-    el('div', 'sub', `Biaya sekarang ${usd(now)} per bulan, setelah perubahan ${usd(nw)}` + (now > 0 ? ` (${fmt(Math.abs(sv) / now * 100)}% ${sv < 0 ? 'lebih tinggi' : 'lebih rendah'})` : '') + (plans.length < 2 ? '. Hanya resource yang dimuat yang dihitung.' : '') + (S.prices.mode === 'estimate' ? '. Biaya adalah estimasi dengan harga standar. Isi biaya sekarang agar lebih akurat.' : S.prices.warn ? '. ' + S.prices.warn + ' Memakai harga standar sementara.' : '')));
+  const sub = el('div', 'sub', t('hero_sub', { now: usd(now), nw: usd(nw), pct: now > 0 ? fmt(Math.abs(sv) / now * 100) : '0', dir: t(sv < 0 ? 'higher' : 'lower') }) + (plans.length < 2 ? '. ' + t('hero_partial') : ''));
+  if (S.prices.mode === 'estimate') { const b = el('span', 'badge', t('hero_est')); b.appendChild(tipEl('tip_est')); sub.append(' ', b); }
+  hero.append(el('span', 'tag', t(sv < 0 ? 'hero_up' : 'hero_save')), el('div', 'big', usd(Math.abs(sv))), sub);
+
+  const sc = { cpu: { req: num('scCpuReq'), lim: num('scCpuLim') }, memory: { req: num('scMemReq'), lim: num('scMemLim') } };
+  const hasSc = k => sc[k].req > 0 || sc[k].lim > 0;
+  const mReq = (k, p) => Math.max(1, Math.ceil(p.recReq - sc[k].req));
+  const mLim = (k, p) => Math.max(mReq(k, p), Math.ceil(p.recLim - sc[k].lim));
+  const nm = $('nameMain').value.trim() || 'app', ns = $('nameSide').value.trim() || 'sidecar';
+  const uOf = k => k === 'cpu' ? 'm' : 'MiB', val = (k, v) => k === 'cpu' ? v + 'm' : v + 'Mi';
+
   const grid = $('recgrid'); grid.textContent = '';
   for (const { k, p } of plans) {
-    const c = cfg(k), u = k === 'cpu' ? 'm' : 'MiB', a = p.alert, card = el('div', 'rcard');
-    const head = el('div', 'rhead'); head.appendChild(el('span', 'rname', NAME[k]));
-    const dirTxt = { turun: 'Turunkan request', naik: 'Naikkan request', tetap: 'Request tetap' }[p.dir];
-    head.appendChild(el('span', 'pill ' + (p.dir === 'turun' ? 'ok' : p.dir === 'naik' ? 'warn' : ''), dirTxt + (p.dir === 'tetap' ? '' : ' ' + fmt(Math.abs(p.change)) + '%')));
+    const c = cfg(k), u = uOf(k), card = el('div', 'rcard');
+    const head = el('div', 'rhead'); head.appendChild(el('span', 'rname', t('card_title', { res: NAME[k] })));
+    const dirTxt = p.dir === 'turun' ? t('dir_down', { pct: fmt(Math.abs(p.change)) }) : p.dir === 'naik' ? t('dir_up', { pct: fmt(Math.abs(p.change)) }) : t('dir_same');
+    head.appendChild(el('span', 'pill ' + (p.dir === 'turun' ? 'ok' : p.dir === 'naik' ? 'warn' : ''), dirTxt));
     card.appendChild(head);
     const row = (lab, nw2, was) => { const r = el('div', 'rrow'); r.append(el('span', 'lab', lab), el('span', 'new', nw2), el('span', 'was', was)); return r; };
-    card.append(row('Request', `${fmt(p.recReq)} ${u}`, `sekarang ${fmt(c.req)} ${u}`), row('Limit', `${fmt(p.recLim)} ${u}`, `sekarang ${fmt(c.lim)} ${u} · request x ${c.mult}`));
-    if (p.limitRisk) card.appendChild(el('div', 'rwarn', `Pod tertinggi di data ${fmt(p.sm.maxPod)} ${u}, lebih tinggi dari limit ini. ${k === 'cpu' ? 'Risiko throttle (request melambat).' : 'Risiko OOM (pod mati).'} Naikkan pengali limit.`));
-    const cost = el('div', 'rline'); cost.append(el('span', '', `Biaya ${usd(p.costNow)} → ${usd(p.costNew)}`), el('b', p.saving < 0 ? 'neg' : 'pos', (p.saving < 0 ? 'naik ' : 'hemat ') + usd(Math.abs(p.saving))));
+    card.append(row(t('lab_request'), `${fmt(p.recReq)} ${u}`, t('now_word', { v: `${fmt(c.req)} ${u}` })), row(t('lab_limit'), `${fmt(p.recLim)} ${u}`, t('now_word', { v: `${fmt(c.lim)} ${u}` }) + ' · ' + t('limit_note', { m: c.mult })));
+    if (p.limitRisk) card.appendChild(el('div', 'rwarn', t(k === 'cpu' ? 'risk_cpu' : 'risk_mem', { v: `${fmt(p.sm.maxPod)} ${u}` })));
+    const cost = el('div', 'rline'); cost.append(el('span', '', t('cost_line', { a: usd(p.costNow), b: usd(p.costNew) })), el('b', p.saving < 0 ? 'neg' : 'pos', t(p.saving < 0 ? 'rises' : 'saves', { v: usd(Math.abs(p.saving)) })));
     card.appendChild(cost);
-    const al = el('div', 'ralert'); al.appendChild(el('span', 'lab', 'Alert per pod'));
-    const wl = el('div'); wl.append(el('span', 'dot w'), document.createTextNode(`Warning di atas `), el('b', '', `${fmt(a.warn)} ${u}`), document.createTextNode(` (${a.warnPct}% request)`));
-    const cl = el('div'); cl.append(el('span', 'dot c'), document.createTextNode(`Critical di atas `), el('b', '', `${fmt(a.crit)} ${u}`), document.createTextNode(` (${a.critPct}% request)`));
-    al.append(wl, cl, el('span', 'est', `Dari data: pod tunggal melewati warning di ${fmt(a.warnSamples)}% sampel dan critical di ${fmt(a.critSamples)}%.` + (a.critSamples > 1 ? ' Cukup sering, pakai durasi minimal (for) agar tidak berisik.' : '')));
-    card.appendChild(al);
+    if (hasSc(k)) card.appendChild(el('div', 'hint', t('per_container', { main: nm, r1: val(k, mReq(k, p)), l1: val(k, mLim(k, p)), side: ns, r2: val(k, sc[k].req), l2: val(k, sc[k].lim) })));
     grid.appendChild(card);
   }
+
+  const wp = cfg(plans[0].k).warnPct, cp = cfg(plans[0].k).critPct;
+  const at = $('alerttable'); at.textContent = '';
+  const thead = el('thead'), hr = el('tr');
+  [t('th_res'), t('th_scope'), t('th_req'), t('th_warn', { p: wp }), t('th_crit', { p: cp })].forEach(x => hr.appendChild(el('th', '', x)));
+  thead.appendChild(hr); at.appendChild(thead);
+  const tb = el('tbody'), notes = $('alertnote'); notes.textContent = '';
+  const addRow = (k, scope, req) => {
+    const u = uOf(k), tr = el('tr');
+    [NAME[k], scope, `${fmt(req)} ${u}`, `${fmt(req * wp / 100)} ${u}`, `${fmt(req * cp / 100)} ${u}`].forEach(x => tr.appendChild(el('td', '', x)));
+    tb.appendChild(tr);
+  };
+  for (const { k, p } of plans) {
+    addRow(k, t('scope_total'), p.recReq);
+    if (hasSc(k)) { addRow(k, nm, mReq(k, p)); if (sc[k].req > 0) addRow(k, ns, sc[k].req); }
+    const a = p.alert;
+    notes.appendChild(el('li', '', t('alert_note', { res: NAME[k], w: fmt(a.warnSamples), c: fmt(a.critSamples) }) + (a.critSamples > 1 ? t('noisy') : '')));
+  }
+  at.appendChild(tb);
+  if (!plans.some(x => hasSc(x.k))) notes.appendChild(el('li', '', t('no_split')));
+
+  const sel = c => `namespace="NAMESPACE", pod=~"^DEPLOYMENT(-[^-]+){2}$", container="${c}"`;
+  const prom = [];
+  for (const { k, p } of plans) {
+    const targets = hasSc(k) ? [[nm, mReq(k, p)], ...(sc[k].req > 0 ? [[ns, sc[k].req]] : [])] : [['*', p.recReq]];
+    prom.push(k === 'cpu' ? '# CPU (millicores) per pod' : '# Memory (MiB) per pod');
+    for (const [c, req] of targets) {
+      const base = hasSc(k)
+        ? (k === 'cpu' ? `sum(rate(container_cpu_usage_seconds_total{${sel(c)}}[4m])) by (pod) * 1000` : `sum(container_memory_working_set_bytes{${sel(c)}}) by (pod) / 1024 / 1024`)
+        : (k === 'cpu' ? 'sum(rate(container_cpu_usage_seconds_total{namespace="NAMESPACE", pod=~"^DEPLOYMENT(-[^-]+){2}$", container!="POD", container!=""}[4m])) by (pod) * 1000' : 'sum(container_memory_working_set_bytes{namespace="NAMESPACE", pod=~"^DEPLOYMENT(-[^-]+){2}$", container!="POD", container!=""}) by (pod) / 1024 / 1024');
+      prom.push(`# ${c === '*' ? 'pod total' : c}`, `${base} > ${Math.round(req * wp / 100)}   # warning`, `${base} > ${Math.round(req * cp / 100)}   # critical`);
+    }
+    prom.push('');
+  }
+  $('promql').textContent = prom.join('\n').trim();
+
   const y = ['alerts:'];
   for (const { k, p } of plans) {
     const crit = Math.round(p.alert.crit);
@@ -458,51 +655,41 @@ function renderSummary(plans) {
     else y.push('  memory:', '    frequency: 5m', `    message: High memory on pod detected. More than ${crit}MiB`, '    queryRange: 5m', `    target: ${crit}`, '    type: max');
   }
   $('alertyaml').textContent = y.join('\n');
-  const sc = { cpu: { req: num('scCpuReq'), lim: num('scCpuLim') }, memory: { req: num('scMemReq'), lim: num('scMemLim') } };
-  const hasSc = sc.cpu.req + sc.cpu.lim + sc.memory.req + sc.memory.lim > 0;
-  const mReq = (k, p) => Math.max(1, Math.ceil(p.recReq - sc[k].req));
-  const mLim = (k, p) => Math.max(mReq(k, p), Math.ceil(p.recLim - sc[k].lim));
-  const val = (k, v) => k === 'cpu' ? v + 'm' : v + 'Mi';
+
   const r = [];
-  if (hasSc) r.push('# Container utama = total pod dikurangi sidecar.', '# Total pod (request / limit): ' + plans.map(({ k, p }) => `${k} ${val(k, Math.ceil(p.recReq))} / ${val(k, Math.ceil(p.recLim))}`).join(', '));
+  if (plans.some(x => hasSc(x.k))) r.push(t('yaml_main'), t('yaml_total', { v: plans.map(({ k, p }) => `${k} ${val(k, Math.ceil(p.recReq))} / ${val(k, Math.ceil(p.recLim))}`).join(', ') }));
   r.push('resources:', '  limits:'); plans.forEach(({ k, p }) => r.push(`    ${k}: ${val(k, mLim(k, p))}`));
   r.push('  requests:'); plans.forEach(({ k, p }) => r.push(`    ${k}: ${val(k, mReq(k, p))}`));
   $('resyaml').textContent = r.join('\n');
 }
 function renderKind(k) {
   const d = S.data[k], res = d.res, u = res.unit, c = cfg(k);
-  $('src-' + k).textContent = d.name + (d.sample ? ' (contoh)' : '');
+  $('src-' + k).textContent = d.name;
   renderChips(k);
   const why = $('why-' + k), check = $('check-' + k);
   why.textContent = ''; check.textContent = '';
-  if (!(c.req > 0)) {
-    check.textContent = 'Isi request sekarang untuk melihat rekomendasi.';
-    S.plot[k] = null; drawChart(k, c); return null;
-  }
+  if (!(c.req > 0)) { check.textContent = t('fill_req'); S.plot[k] = null; drawChart(k, c); return null; }
   const p = Core.plan(res, c), sm = p.sm;
-
-  const basisLbl = { p95: 'p95', p99: 'p99', max: 'maks' }[c.basis];
-  const li = (txt, on) => { const e = el('li', on ? 'bind' : '', txt + (on ? ' (dipakai)' : '')); why.appendChild(e); };
-  li(`HPA: rata-rata antar pod ${basisLbl} ${fmt(p.avgBasis)} ÷ ${c.target - c.margin}% = ${fmt(p.reqHpa)} ${u}`, p.binds === 'hpa');
-  li(`Pod tunggal: p99 ${fmt(sm.pooled.p99)} + ${c.buffer}% = ${fmt(p.reqPod)} ${u}`, p.binds === 'pod');
-  li(`Minimum: ${fmt(c.min)} ${u}`, p.binds === 'min');
-  const lbl = { ok: 'Aman', warn: 'Mepet', bad: 'Memicu scale-up' }[p.after.st];
-  check.append(document.createTextNode(`Dengan request ${fmt(p.recReq)} ${u}, rata-rata antar pod maksimal ${fmt(p.after.max)}% dari request (target HPA ${c.target}%), ${fmt(p.after.overPct)}% waktu di atas target.`), el('span', 'pill ' + p.after.st, lbl));
+  const bl = c.basis === 'max' ? t('basis_max') : c.basis;
+  const li = (txt, on) => why.appendChild(el('li', on ? 'bind' : '', txt + (on ? ' ' + t('used') : '')));
+  li(t('why_hpa', { b: bl, v: fmt(p.avgBasis), p: c.target - c.margin, r: `${fmt(p.reqHpa)} ${u}` }), p.binds === 'hpa');
+  li(t('why_pod', { v: fmt(sm.pooled.p99), b: c.buffer, r: `${fmt(p.reqPod)} ${u}` }), p.binds === 'pod');
+  li(t('why_min', { v: `${fmt(c.min)} ${u}` }), p.binds === 'min');
+  check.append(document.createTextNode(t('check', { r: `${fmt(p.recReq)} ${u}`, m: fmt(p.after.max), t: c.target, o: fmt(p.after.overPct) })), el('span', 'pill ' + p.after.st, t('st_' + p.after.st)));
 
   const dl = rows => '<dl class="s">' + rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('') + '</dl>';
   $('cards-' + k).innerHTML =
-    `<div class="card"><h2>Rata-rata antar pod</h2>${dl([['p50', fmt(sm.avg.p50) + ' ' + u], ['p95', fmt(sm.avg.p95) + ' ' + u], ['p99', fmt(sm.avg.p99) + ' ' + u], ['maks', fmt(sm.avg.max) + ' ' + u]])}</div>` +
-    `<div class="card"><h2>Utilisasi vs request sekarang</h2>${dl([['p50', fmt(sm.util.p50) + '%'], ['p95', fmt(sm.util.p95) + '%'], ['maks', fmt(sm.util.max) + '%'], ['di atas ' + c.target + '%', fmt(sm.overPct) + '% waktu']])}</div>` +
-    `<div class="card"><h2>Pod tunggal</h2>${dl([['p50', fmt(sm.pooled.p50) + ' ' + u], ['p95', fmt(sm.pooled.p95) + ' ' + u], ['p99', fmt(sm.pooled.p99) + ' ' + u], ['p99.9', fmt(sm.pooled.p999) + ' ' + u], ['maks', fmt(sm.pooled.max) + ' ' + u]])}</div>` +
-    `<div class="card"><h2>Pod bersamaan</h2>${dl([['median', fmt(sm.pods.median)], ['maks', fmt(sm.pods.max)], ['% pod tertinggi dari limit', c.lim > 0 ? fmt(sm.limPct) + '%' : '-']])}</div>`;
+    `<div class="card"><h2>${t('c_avg')}</h2>${dl([['p50', fmt(sm.avg.p50) + ' ' + u], ['p95', fmt(sm.avg.p95) + ' ' + u], ['p99', fmt(sm.avg.p99) + ' ' + u], [t('c_maxc'), fmt(sm.avg.max) + ' ' + u]])}</div>` +
+    `<div class="card"><h2>${t('c_util')}</h2>${dl([['p50', fmt(sm.util.p50) + '%'], ['p95', fmt(sm.util.p95) + '%'], [t('c_maxc'), fmt(sm.util.max) + '%'], [t('c_above', { t: c.target }), t('c_time', { v: fmt(sm.overPct) })]])}</div>` +
+    `<div class="card"><h2>${t('c_single')}</h2>${dl([['p50', fmt(sm.pooled.p50) + ' ' + u], ['p95', fmt(sm.pooled.p95) + ' ' + u], ['p99', fmt(sm.pooled.p99) + ' ' + u], ['p99.9', fmt(sm.pooled.p999) + ' ' + u], [t('c_maxc'), fmt(sm.pooled.max) + ' ' + u]])}</div>` +
+    `<div class="card"><h2>${t('c_conc')}</h2>${dl([[t('c_median'), fmt(sm.pods.median)], [t('c_maxc'), fmt(sm.pods.max)], [t('c_pct_lim'), c.lim > 0 ? fmt(sm.limPct) + '%' : '-']])}</div>`;
 
   const ci = $('cands-' + k);
   if (!ci.value.trim()) ci.value = [...new Set([p.recReq, Math.round(c.req * .9), Math.round(c.req), Math.round(c.req * 1.1)].filter(x => x > 0))].sort((a, b) => a - b).join(', ');
   const cands = ci.value.split(/[,\s]+/).map(Number).filter(x => x > 0);
-  const sim = Core.simulate(res, c.target, c.margin, cands), L = { ok: 'Aman', warn: 'Mepet', bad: 'Scale-up' };
-  $('sim-' + k).innerHTML = `<thead><tr><th>Request (${u})</th><th>Util p50</th><th>Util p95</th><th>Util maks</th><th>Waktu di atas target</th><th>Status</th></tr></thead><tbody>` +
-    sim.map(r => `<tr class="${Math.abs(r.req - c.req) < .5 ? 'cur' : ''}"><td>${fmt(r.req)}</td><td>${fmt(r.p50)}%</td><td>${fmt(r.p95)}%</td><td>${fmt(r.max)}%</td><td>${fmt(r.overPct)}%</td><td class="st ${r.st}">${L[r.st]}</td></tr>`).join('') + '</tbody>';
-
+  const sim = Core.simulate(res, c.target, c.margin, cands);
+  $('sim-' + k).innerHTML = `<thead><tr><th>Request (${u})</th><th>${t('th_util50')}</th><th>${t('th_util95')}</th><th>${t('th_utilmax')}</th><th>${t('th_over')}</th><th>${t('th_status')}</th></tr></thead><tbody>` +
+    sim.map(r => `<tr class="${Math.abs(r.req - c.req) < .5 ? 'cur' : ''}"><td>${fmt(r.req)}</td><td>${fmt(r.p50)}%</td><td>${fmt(r.p95)}%</td><td>${fmt(r.max)}%</td><td>${fmt(r.overPct)}%</td><td class="st ${r.st}">${t('st_' + r.st)}</td></tr>`).join('') + '</tbody>';
   S.plot[k] = { c, u };
   drawChart(k, c);
   return p;
@@ -511,86 +698,32 @@ function renderChips(k) {
   const d = S.data[k], box = $('chips-' + k);
   if (d.res.revs.length < 2) { box.hidden = true; return; }
   box.hidden = false; box.textContent = '';
-  box.appendChild(el('span', 'hint', 'Revisi pod yang dihitung:'));
+  box.appendChild(el('span', 'hint', t('chips')));
   for (const r of d.res.revs) {
-    const b = el('button', 'chip', `${r.rev} (${r.pods} pod)`); b.type = 'button';
+    const b = el('button', 'chip', `${r.rev} (${r.pods})`); b.type = 'button';
     b.setAttribute('aria-pressed', d.excluded.has(r.rev) ? 'false' : 'true');
     b.addEventListener('click', () => {
       if (d.excluded.has(r.rev)) d.excluded.delete(r.rev); else d.excluded.add(r.rev);
       if (d.excluded.size >= d.res.revs.length) d.excluded.delete(r.rev);
-      const e = recompute(k, false); S.errors = e ? [e] : []; renderAll();
+      const e = recompute(k, false); S.errors = e ? [{ name: d.name, code: e }] : []; renderAll();
     });
     box.appendChild(b);
   }
 }
 
-/* ---------- grafik ---------- */
-function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
-function drawChart(k, c) {
-  const d = S.data[k]; if (!d || !d.res) return;
-  const cv = $('cv-' + k), w = cv.clientWidth, h = 280;
-  if (w < 50) return;
-  const res = d.res, dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-  const S1 = res.series.filter(x => x.t != null); if (S1.length < 2) return;
-  c = c || cfg(k); const u = res.unit;
-  const thr = c.req > 0 ? c.req * c.target / 100 : null;
-  const ymax = niceMax(Math.max(...S1.map(x => x.max), thr || 0, c.req || 0) * 1.05);
-  const P = { l: 52, r: 14, t: 14, b: 26 }, iw = w - P.l - P.r, ih = h - P.t - P.b;
-  const tmin = S1[0].t, tmax = S1[S1.length - 1].t;
-  const X = t => P.l + (t - tmin) / (tmax - tmin) * iw, Y = v => P.t + ih - (v / ymax) * ih;
-  const ink = cssv('--ink'), muted = cssv('--muted'), line = cssv('--line'), acc = cssv('--accent'), warn = cssv('--warn');
-  g.font = '11px ' + cssv('--font-mono'); g.lineWidth = 1;
-  g.strokeStyle = line; g.fillStyle = muted; g.textAlign = 'right'; g.textBaseline = 'middle';
-  for (let i = 0; i <= 5; i++) { const v = ymax / 5 * i, y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.fillText(fmt(v), P.l - 6, y); }
-  g.textAlign = 'center'; g.textBaseline = 'top';
-  const nt = Math.max(2, Math.min(6, Math.floor(iw / 110)));
-  for (let i = 0; i <= nt; i++) { const t = tmin + (tmax - tmin) * i / nt; g.fillText(fmtT(t), Math.min(Math.max(X(t), P.l + 30), w - P.r - 30), h - P.b + 7); }
-  const path = (key, color, lw) => { g.beginPath(); g.strokeStyle = color; g.lineWidth = lw; S1.forEach((s, i) => { const x = X(s.t), y = Y(s[key]); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); };
-  path('max', muted, 1); path('avg', acc, 2);
-  const hline = (v, color, label, dash) => { const y = Y(v); g.beginPath(); g.setLineDash(dash); g.strokeStyle = color; g.lineWidth = 1.5; g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.setLineDash([]); g.fillStyle = color; g.textAlign = 'left'; g.textBaseline = 'bottom'; g.fillText(label, P.l + 6, y - 3); };
-  if (c.req > 0) hline(c.req, ink, 'request ' + fmt(c.req), [2, 4]);
-  if (thr) hline(thr, warn, 'ambang HPA ' + fmt(thr), [6, 4]);
-  S.plot[k] = Object.assign(S.plot[k] || {}, { S1, X, Y, P, w, h, iw, tmin, tmax, ink, acc, u, c });
-  $('lg-' + k).innerHTML = `<span><i style="border-color:${acc}"></i>rata-rata antar pod</span><span><i style="border-color:${muted};border-top-width:1px"></i>pod tertinggi</span>` +
-    (thr ? `<span><i style="border-color:${warn};border-top-style:dashed"></i>ambang HPA (${c.target}% x request)</span>` : '') + (c.req > 0 ? `<span><i style="border-color:${ink};border-top-style:dotted"></i>request</span>` : '');
-}
-function hover(k, ev) {
-  const p = S.plot[k]; if (!p || !p.S1) return;
-  const x = ev.clientX - $('cv-' + k).getBoundingClientRect().left;
-  if (x < p.P.l || x > p.w - p.P.r) return leave(k);
-  const t = p.tmin + (x - p.P.l) / p.iw * (p.tmax - p.tmin);
-  let lo = 0, hi = p.S1.length - 1;
-  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (p.S1[m].t < t) lo = m; else hi = m; }
-  const s = Math.abs(p.S1[lo].t - t) < Math.abs(p.S1[hi].t - t) ? p.S1[lo] : p.S1[hi];
-  drawChart(k, p.c);
-  const g = $('cv-' + k).getContext('2d'), px = p.X(s.t);
-  g.strokeStyle = p.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(Math.round(px) + .5, p.P.t); g.lineTo(Math.round(px) + .5, p.h - p.P.b); g.stroke();
-  g.fillStyle = p.acc; g.beginPath(); g.arc(px, p.Y(s.avg), 3.5, 0, 7); g.fill();
-  const tip = $('tip-' + k);
-  tip.textContent = ''; tip.style.display = 'block';
-  [fmtT(s.t), `rata-rata ${fmt(s.avg)} ${p.u}` + (p.c.req > 0 ? ` (${fmt(s.avg / p.c.req * 100)}%)` : ''), `tertinggi ${fmt(s.max)} ${p.u}`, `${s.n} pod`].forEach((x, i) => { if (i) tip.appendChild(document.createElement('br')); tip.appendChild(document.createTextNode(x)); });
-  tip.style.left = Math.min(Math.max(px + 12, 0), p.w - tip.offsetWidth) + 'px';
-}
-function leave(k) { $('tip-' + k).style.display = 'none'; const p = S.plot[k]; if (p) drawChart(k, p.c); }
-
 /* ---------- jumlah pod ---------- */
 function renderPods() {
   const list = [];
   const d = S.data.memory && S.data.memory.res ? S.data.memory : S.data.cpu && S.data.cpu.res ? S.data.cpu : null;
-  if (d) list.push({ label: 'Pod berjalan (dari CSV ' + NAME[d.res.kind] + (d.excluded.size ? ', revisi terpilih' : '') + ')', pts: Core.podCounts(d.res) });
+  if (d) list.push({ label: t('pods_running', { res: NAME[d.res.kind], rev: d.excluded.size ? t('rev_sel') : '' }), pts: Core.podCounts(d.res) });
   for (const r of S.reps) list.push({ label: r.label, pts: r.pts });
   S.podList = list.filter(x => x.pts.length);
   $('podsec').hidden = !S.podList.length;
   if (!S.podList.length) return;
-  $('podnote').textContent = S.reps.length
-    ? 'Berjalan dihitung dari pod yang punya data di CSV CPU atau Memory. Seri lain berasal dari CSV jumlah pod yang kamu unggah.'
-    : 'Berjalan dihitung dari pod yang punya data di CSV CPU atau Memory. Untuk melihat Available dan Desired, unggah CSV dari panel Pod Available dan Pod Desired (Inspect, Data, Download CSV).';
-  const t = $('podtable'); t.textContent = '';
+  const tbl = $('podtable'); tbl.textContent = '';
   const thead = el('thead'), hr = el('tr');
-  ['Seri', 'Terakhir', 'Min', 'Median', 'Maks', 'Titik'].forEach(x => hr.appendChild(el('th', '', x)));
-  thead.appendChild(hr); t.appendChild(thead);
+  [t('th_series'), t('th_last'), t('th_min'), t('th_median'), t('th_max'), t('th_pts')].forEach(x => hr.appendChild(el('th', '', x)));
+  thead.appendChild(hr); tbl.appendChild(thead);
   const tb = el('tbody');
   for (const s of S.podList) {
     const st = Core.seriesStats(s.pts), tr = el('tr');
@@ -598,7 +731,7 @@ function renderPods() {
     [st.last, st.min, st.median, st.max, st.n].forEach(v => tr.appendChild(el('td', '', fmt(v))));
     tb.appendChild(tr);
   }
-  t.appendChild(tb);
+  tbl.appendChild(tb);
   drawPods();
 }
 function drawPods() {
@@ -612,14 +745,14 @@ function drawPods() {
   if (tmax === tmin) tmax = tmin + 1;
   const stepY = Math.max(1, Math.ceil(vmax / 5)), top = Math.ceil(vmax / stepY) * stepY;
   const P = { l: 40, r: 14, t: 12, b: 26 }, iw = w - P.l - P.r, ih = h - P.t - P.b;
-  const X = t => P.l + (t - tmin) / (tmax - tmin) * iw, Y = v => P.t + ih - v / top * ih;
+  const X = tm => P.l + (tm - tmin) / (tmax - tmin) * iw, Y = v => P.t + ih - v / top * ih;
   const muted = cssv('--muted'), line = cssv('--line'), ink = cssv('--ink');
   const cols = ['--accent', '--warn', '--ok', '--bad', '--muted'].map(cssv), dashes = [[], [6, 4], [2, 3], [8, 3, 2, 3], [1, 4]];
   g.font = '11px ' + cssv('--font-mono'); g.lineWidth = 1; g.strokeStyle = line; g.fillStyle = muted; g.textAlign = 'right'; g.textBaseline = 'middle';
   for (let v = 0; v <= top; v += stepY) { const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.fillText(String(v), P.l - 6, y); }
   g.textAlign = 'center'; g.textBaseline = 'top';
   const nt = Math.max(2, Math.min(6, Math.floor(iw / 110)));
-  for (let i = 0; i <= nt; i++) { const t = tmin + (tmax - tmin) * i / nt; g.fillText(fmtT(t), Math.min(Math.max(X(t), P.l + 30), w - P.r - 30), h - P.b + 7); }
+  for (let i = 0; i <= nt; i++) { const tm = tmin + (tmax - tmin) * i / nt; g.fillText(fmtT(tm), Math.min(Math.max(X(tm), P.l + 30), w - P.r - 30), h - P.b + 7); }
   list.forEach((s, i) => {
     g.strokeStyle = cols[i % cols.length]; g.fillStyle = g.strokeStyle; g.lineWidth = 2; g.setLineDash(dashes[i % dashes.length]);
     const pts = s.pts.slice().sort((a, b) => a.t - b.t);
@@ -628,34 +761,93 @@ function drawPods() {
     pts.forEach((p, j) => { if (!j) g.moveTo(X(p.t), Y(p.v)); else { g.lineTo(X(p.t), Y(pts[j - 1].v)); g.lineTo(X(p.t), Y(p.v)); } });
     g.stroke(); g.setLineDash([]);
   });
-  S.podPlot = { list, X, Y, P, w, h, iw, tmin, tmax, ink, cols };
-  $('lg-pods').innerHTML = list.map((s, i) => `<span><i style="border-color:${cols[i % cols.length]};border-top-style:${i % dashes.length === 0 ? 'solid' : 'dashed'}"></i>${s.label.replace(/[<>&]/g, '')}</span>`).join('');
+  S.podPlot = { list, X, Y, P, w, h, iw, tmin, tmax, ink };
+  const lg = $('lg-pods'); lg.textContent = '';
+  list.forEach((s, i) => { const sp = el('span'), ic = el('i'); ic.style.borderColor = cols[i % cols.length]; ic.style.borderTopStyle = i % dashes.length === 0 ? 'solid' : 'dashed'; sp.append(ic, document.createTextNode(s.label)); lg.appendChild(sp); });
 }
 function hoverPods(ev) {
   const p = S.podPlot; if (!p) return;
   const x = ev.clientX - $('cv-pods').getBoundingClientRect().left;
   if (x < p.P.l || x > p.w - p.P.r) return leavePods();
-  const t = p.tmin + (x - p.P.l) / p.iw * (p.tmax - p.tmin);
+  const tm = p.tmin + (x - p.P.l) / p.iw * (p.tmax - p.tmin);
   drawPods();
   const g = $('cv-pods').getContext('2d'), px = Math.round(x) + .5;
   g.strokeStyle = p.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(px, p.P.t); g.lineTo(px, p.h - p.P.b); g.stroke();
   const tip = $('tip-pods'); tip.textContent = ''; tip.style.display = 'block';
-  const lines = [fmtT(t)];
-  p.list.forEach(s => { const pts = s.pts.slice().sort((a, b) => a.t - b.t); let v = pts[0].v; for (const q of pts) { if (q.t <= t) v = q.v; else break; } lines.push(`${s.label.replace(/ \(.*\)$/, '')}: ${fmt(v)}`); });
+  const lines = [fmtT(tm)];
+  p.list.forEach(s => { const pts = s.pts.slice().sort((a, b) => a.t - b.t); let v = pts[0].v; for (const q of pts) { if (q.t <= tm) v = q.v; else break; } lines.push(`${s.label.replace(/ \(.*\)$/, '')}: ${fmt(v)}`); });
   lines.forEach((x2, i) => { if (i) tip.appendChild(document.createElement('br')); tip.appendChild(document.createTextNode(x2)); });
   tip.style.left = Math.min(Math.max(x + 12, 0), p.w - tip.offsetWidth) + 'px';
 }
 function leavePods() { $('tip-pods').style.display = 'none'; drawPods(); }
 
+/* ---------- grafik per resource ---------- */
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function drawChart(k, c) {
+  const d = S.data[k]; if (!d || !d.res) return;
+  const cv = $('cv-' + k), w = cv.clientWidth, h = 280;
+  if (w < 50) return;
+  const res = d.res, dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const S1 = res.series.filter(x => x.t != null); if (S1.length < 2) return;
+  c = c || cfg(k);
+  const thr = c.req > 0 ? c.req * c.target / 100 : null;
+  const ymax = niceMax(Math.max(...S1.map(x => x.max), thr || 0, c.req || 0) * 1.05);
+  const P = { l: 52, r: 14, t: 14, b: 26 }, iw = w - P.l - P.r, ih = h - P.t - P.b;
+  const tmin = S1[0].t, tmax = S1[S1.length - 1].t;
+  const X = tm => P.l + (tm - tmin) / (tmax - tmin) * iw, Y = v => P.t + ih - (v / ymax) * ih;
+  const ink = cssv('--ink'), muted = cssv('--muted'), line = cssv('--line'), acc = cssv('--accent'), warn = cssv('--warn');
+  g.font = '11px ' + cssv('--font-mono'); g.lineWidth = 1;
+  g.strokeStyle = line; g.fillStyle = muted; g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let i = 0; i <= 5; i++) { const v = ymax / 5 * i, y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.fillText(fmt(v), P.l - 6, y); }
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  const nt = Math.max(2, Math.min(6, Math.floor(iw / 110)));
+  for (let i = 0; i <= nt; i++) { const tm = tmin + (tmax - tmin) * i / nt; g.fillText(fmtT(tm), Math.min(Math.max(X(tm), P.l + 30), w - P.r - 30), h - P.b + 7); }
+  const path = (key, color, lw) => { g.beginPath(); g.strokeStyle = color; g.lineWidth = lw; S1.forEach((s, i) => { const x = X(s.t), y = Y(s[key]); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); };
+  path('max', muted, 1); path('avg', acc, 2);
+  const hline = (v, color, label, dash) => { const y = Y(v); g.beginPath(); g.setLineDash(dash); g.strokeStyle = color; g.lineWidth = 1.5; g.moveTo(P.l, y); g.lineTo(w - P.r, y); g.stroke(); g.setLineDash([]); g.fillStyle = color; g.textAlign = 'left'; g.textBaseline = 'bottom'; g.fillText(label, P.l + 6, y - 3); };
+  if (c.req > 0) hline(c.req, ink, t('lg_req') + ' ' + fmt(c.req), [2, 4]);
+  if (thr) hline(thr, warn, 'HPA ' + fmt(thr), [6, 4]);
+  S.plot[k] = Object.assign(S.plot[k] || {}, { S1, X, Y, P, w, h, iw, tmin, tmax, ink, acc, u: res.unit, c });
+  const lg = $('lg-' + k); lg.textContent = '';
+  const item = (color, style, text, bw) => { const sp = el('span'), ic = el('i'); ic.style.borderColor = color; ic.style.borderTopStyle = style; if (bw) ic.style.borderTopWidth = bw; sp.append(ic, document.createTextNode(text)); lg.appendChild(sp); };
+  item(acc, 'solid', t('lg_avg')); item(muted, 'solid', t('lg_max'), '1px');
+  if (thr) item(warn, 'dashed', t('lg_thr', { t: c.target }));
+  if (c.req > 0) item(ink, 'dotted', t('lg_req'));
+}
+function hover(k, ev) {
+  const p = S.plot[k]; if (!p || !p.S1) return;
+  const x = ev.clientX - $('cv-' + k).getBoundingClientRect().left;
+  if (x < p.P.l || x > p.w - p.P.r) return leave(k);
+  const tm = p.tmin + (x - p.P.l) / p.iw * (p.tmax - p.tmin);
+  let lo = 0, hi = p.S1.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (p.S1[m].t < tm) lo = m; else hi = m; }
+  const s = Math.abs(p.S1[lo].t - tm) < Math.abs(p.S1[hi].t - tm) ? p.S1[lo] : p.S1[hi];
+  drawChart(k, p.c);
+  const g = $('cv-' + k).getContext('2d'), px = p.X(s.t);
+  g.strokeStyle = p.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(Math.round(px) + .5, p.P.t); g.lineTo(Math.round(px) + .5, p.h - p.P.b); g.stroke();
+  g.fillStyle = p.acc; g.beginPath(); g.arc(px, p.Y(s.avg), 3.5, 0, 7); g.fill();
+  const tip = $('tip-' + k); tip.textContent = ''; tip.style.display = 'block';
+  [fmtT(s.t), `${t('tt_avg')} ${fmt(s.avg)} ${p.u}` + (p.c.req > 0 ? ` (${fmt(s.avg / p.c.req * 100)}%)` : ''), `${t('tt_max')} ${fmt(s.max)} ${p.u}`, t('tt_pods', { n: s.n })].forEach((x2, i) => { if (i) tip.appendChild(document.createElement('br')); tip.appendChild(document.createTextNode(x2)); });
+  tip.style.left = Math.min(Math.max(px + 12, 0), p.w - tip.offsetWidth) + 'px';
+}
+function leave(k) { $('tip-' + k).style.display = 'none'; const p = S.plot[k]; if (p) drawChart(k, p.c); }
+
 /* ---------- event ---------- */
+function setLang(l) {
+  LANG = l; try { localStorage.setItem('lang', l); } catch (e) { /* ignore */ }
+  setLocale(); applyStatic(); renderAll();
+}
+document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
 $('file').addEventListener('change', e => { if (e.target.files.length) loadFiles([...e.target.files]); });
 const drop = $('drop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
-$('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps()), true); focusSummary(); });
+$('sample').addEventListener('click', () => { S.podsTouched = false; S.reps = []; S.costFile = ''; loadTexts(sampleItems(), true); focusSummary(); });
 $('pods').addEventListener('input', () => { S.podsTouched = true; });
-for (const id of ['target', 'margin', 'warnPct', 'critPct', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
+for (const id of ['target', 'margin', 'warnPct', 'critPct', 'scCpuReq', 'scCpuLim', 'scMemReq', 'scMemLim', 'nameMain', 'nameSide', 'basis', 'buffer', 'mult', 'minReq', 'pods', 'priceManualOn', 'priceCore', 'priceGiB', 'costNow', 'ratio', 'xreq-cpu', 'xreq-memory']) $(id).addEventListener('input', renderAll);
 for (const k of KINDS) {
   for (const id of ['req-', 'lim-', 'cands-']) $(id + k).addEventListener('input', renderAll);
   $('cv-' + k).addEventListener('mousemove', e => hover(k, e));
@@ -666,20 +858,21 @@ for (const k of KINDS) {
 function wireCopy(btn, pre, msg) {
   $(btn).addEventListener('click', async () => {
     const txt = $(pre).textContent;
-    try { await navigator.clipboard.writeText(txt); $(msg).textContent = 'Tersalin.'; }
-    catch (e) { const r = document.createRange(); r.selectNodeContents($(pre)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $(msg).textContent = 'Teks sudah dipilih, tekan Ctrl+C atau Cmd+C.'; }
+    try { await navigator.clipboard.writeText(txt); $(msg).textContent = t('copied'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($(pre)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $(msg).textContent = t('copy_manual'); }
     setTimeout(() => { $(msg).textContent = ''; }, 3000);
   });
 }
-wireCopy('copyAlert', 'alertyaml', 'copiedAlert'); wireCopy('copyRes', 'resyaml', 'copiedRes');
-const redraw = () => { KINDS.forEach(k => drawChart(k, S.plot[k] && S.plot[k].c)); drawPods(); };
+wireCopy('copyAlert', 'alertyaml', 'copiedAlert'); wireCopy('copyRes', 'resyaml', 'copiedRes'); wireCopy('copyProm', 'promql', 'copiedProm');
 $('cv-pods').addEventListener('mousemove', hoverPods);
 $('cv-pods').addEventListener('mouseleave', leavePods);
 new ResizeObserver(() => drawPods()).observe($('cv-pods').parentElement);
+const redraw = () => { KINDS.forEach(k => drawChart(k, S.plot[k] && S.plot[k].c)); drawPods(); };
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
 new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-loadTexts(KINDS.map(k => ({ name: 'data-contoh-' + k + '.csv', text: sampleCSV(k) })).concat(sampleReps()), true);
+applyStatic();
+loadTexts(sampleItems(), true);
 </script>
 </body>
 </html>
