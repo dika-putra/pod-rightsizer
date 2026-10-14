@@ -95,7 +95,8 @@ The prices and the ratio are examples. Replace them with your cluster's real val
 
 ## Limits of the estimate
 
-- A real HPA uses metrics-server and has its own handling for pods that are starting or not ready, so its numbers can differ slightly.
+- A real HPA scales on the average utilization across all pods, not on one high pod, and by default skips scaling while the ratio to the target is within a 10% tolerance (an 80% target reacts at about 88%). For CPU it also sets aside some metrics of pods that just started. The page counts every pod and every timestamp, so its estimate of scale-up frequency tends to be higher than reality. Simultaneous bursts such as deploys or traffic surges can still trigger scale-ups when the request is lowered.
+- Behavior described above is from the Kubernetes HPA documentation.
 - Grafana exports points at the panel's step, so short spikes can be smoothed out.
 - Values without a unit are read as bytes for memory when they are large, and as millicores for CPU.
 - The tool only reads usage. Check the limit recommendation against your latency and OOM history before applying it.

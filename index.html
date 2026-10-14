@@ -296,9 +296,9 @@ const I18N = {
     cost_label: 'Biaya sekarang ($/bulan), opsional', cost_ph: 'misal 89.40',
     tip_cost: 'Kosong: biaya diestimasi dengan harga standar. Isi untuk hasil lebih akurat, ambil dari panel Monthly Cost $ atau unggah CSV-nya.',
     settings: 'Pengaturan',
-    s_target: 'Target HPA (%)', tip_target: 'Rata-rata utilisasi antar pod yang memicu scale-up.',
+    s_target: 'Target HPA (%)', tip_target: 'HPA menambah pod saat rata-rata utilisasi semua pod melewati target, bukan karena satu pod tinggi (diredam pod lain). Bawaannya ada toleransi 10%, jadi target 80% baru bereaksi sekitar 88%.',
     s_margin: 'Ruang aman (poin %)', tip_margin: 'Dikurangkan dari target HPA supaya request tidak mepet ambang.',
-    s_basis: 'Rata-rata HPA di', tip_basis: 'Persentil rata-rata antar pod yang dijaga di bawah target. Pakai Maks untuk memory yang naik pelan.',
+    s_basis: 'Rata-rata HPA di', tip_basis: 'Persentil dari rata-rata antar pod yang dijaga di bawah target. p99: sekitar 1% waktu boleh di atas, p95: sekitar 5%. Maks: satu momen saat banyak pod tinggi bersamaan (deploy, lonjakan traffic) menentukan request, jadi bisa boros. Untuk memory yang naik pelan, Maks masuk akal.',
     opt_max: 'Maks',
     s_buffer: 'Buffer pod tunggal (%)', tip_buffer: 'Request minimal sebesar p99 pod tunggal ditambah persen ini.',
     s_mult: 'Limit = request ×', tip_mult: 'Pengali limit terhadap request.',
@@ -376,6 +376,7 @@ const I18N = {
     why_round: 'Pembulatan: {a} → {b}',
     t_cpu_status: 'Status CPU', t_mem_status: 'Status memory', stc_throttle: 'Lambat (throttle)', stc_near: 'Hampir throttle', stc_burst: 'Burst, aman', stc_ok: 'Optimal', stc_waste: 'Boros',
     stm_oom: 'Pod mati (OOM)', stm_near: 'Hampir OOM', stm_evict: 'Aman, risiko evict',
+    tip_check: 'Perkiraan seberapa sering rata-rata antar pod melewati target, artinya HPA bisa menambah pod. Lonjakan serentak (deploy, traffic naik) tetap bisa memicunya walau p99 aman. Untuk CPU, HPA mengabaikan sebagian metrik pod yang baru mulai, jadi angka ini cenderung lebih tinggi dari kenyataan.',
     tip_method: 'Request = yang terbesar dari: rata-rata antar pod ÷ (target − ruang aman), p99 pod tunggal + buffer, dan minimum. Limit = request × pengali. Biaya = pod × 730 jam × request × harga. Data tanpa satuan: memory dibaca bytes bila besar, CPU dibaca milicore.'
   },
   en: {
@@ -393,9 +394,9 @@ const I18N = {
     cost_label: 'Current cost ($/month), optional', cost_ph: 'e.g. 89.40',
     tip_cost: 'Empty: cost is estimated with standard prices. Fill it for a more accurate result; take it from the Monthly Cost $ panel or upload its CSV.',
     settings: 'Settings',
-    s_target: 'HPA target (%)', tip_target: 'Average utilization across pods that triggers a scale-up.',
+    s_target: 'HPA target (%)', tip_target: 'HPA adds pods when the average utilization across all pods passes the target, not because one pod is high (other pods dilute it). By default there is a 10% tolerance, so an 80% target reacts at about 88%.',
     s_margin: 'Safety margin (points)', tip_margin: 'Subtracted from the HPA target so the request stays clear of the threshold.',
-    s_basis: 'Keep HPA average at', tip_basis: 'Percentile of the cross-pod average to keep under the target. Use Max for slowly growing memory.',
+    s_basis: 'Keep HPA average at', tip_basis: 'Percentile of the cross-pod average to keep under the target. p99: about 1% of the time may be above it, p95: about 5%. Max: a single moment when many pods are high together (deploy, traffic surge) sets the request, so it can be wasteful. For slowly growing memory, Max makes sense.',
     opt_max: 'Max',
     s_buffer: 'Single pod buffer (%)', tip_buffer: 'Request is at least the single pod p99 plus this percent.',
     s_mult: 'Limit = request ×', tip_mult: 'Limit multiplier over request.',
@@ -473,6 +474,7 @@ const I18N = {
     why_round: 'Rounding: {a} → {b}',
     t_cpu_status: 'CPU status', t_mem_status: 'Memory status', stc_throttle: 'Throttled', stc_near: 'Near throttle', stc_burst: 'Burst, safe', stc_ok: 'Optimal', stc_waste: 'Over-provisioned',
     stm_oom: 'OOM kill', stm_near: 'Near OOM', stm_evict: 'Safe, evict risk',
+    tip_check: 'Estimate of how often the cross-pod average passes the target, meaning HPA may add pods. Simultaneous bursts (deploys, traffic surges) can still trigger it even when p99 looks safe. For CPU, HPA ignores some metrics of pods that just started, so this figure tends to be higher than reality.',
     tip_method: 'Request = the largest of: cross-pod average ÷ (target − margin), single pod p99 + buffer, and the minimum. Limit = request × multiplier. Cost = pods × 730 hours × request × price. Unitless data: memory is read as bytes when large, CPU as millicores.'
   }
 };
@@ -801,7 +803,7 @@ function renderKind(k) {
   li(t('why_pod', { v: fmt(sm.pooled.p99), b: c.buffer, r: `${fmt(p.reqPod)} ${u}` }), p.binds === 'pod');
   li(t('why_min', { v: `${fmt(c.min)} ${u}` }), p.binds === 'min');
   if (p.pre !== p.raw) why.appendChild(el('li', '', t('why_round', { a: `${fmt(p.pre)} ${u}`, b: `${fmt(p.raw)} ${u}` })));
-  check.append(document.createTextNode(t('check', { r: `${fmt(p.recReq)} ${u}`, m: fmt(p.after.max), t: c.target, o: fmt(p.after.overPct) })), el('span', 'pill ' + p.after.st, t('st_' + p.after.st)));
+  check.append(document.createTextNode(t('check', { r: `${fmt(p.recReq)} ${u}`, m: fmt(p.after.max), t: c.target, o: fmt(p.after.overPct) })), el('span', 'pill ' + p.after.st, t('st_' + p.after.st)), tipEl('tip_check'));
 
   const dl = rows => '<dl class="s">' + rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('') + '</dl>';
   $('cards-' + k).innerHTML =
